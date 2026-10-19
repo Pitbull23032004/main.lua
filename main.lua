@@ -1,832 +1,844 @@
--- Services
+-- ==========================================================================
+-- KNIFE DUELS | COM2 BRUTAL V12 (Loading, Sound, Auto-Kill & Firebase Update)
+-- Jogo: [CEMITÉRIO] DUELOS DE FACA (Knife Duels) - Roblox
+-- Site Oficial: https://darkgamingyt-br-pt.netlify.app/
+-- Firebase: https://darkgamingyt-1c438-default-rtdb.firebaseio.com/
+-- Canal: https://youtube.com/@wallacy_rtx | Discord: https://discord.com/invite/vzMRuAs6gt
+-- ==========================================================================
+
 local Players = game:GetService("Players")
-local CoreGui = game:GetService("CoreGui")
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-local SoundService = game:GetService("SoundService")
-local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+local HttpService = game:GetService("HttpService")
+local TweenService = game:GetService("TweenService")
 
--- Proteção para garantir o pai correto da GUI
-local guiParent = pcall(function() return gethui() end) and gethui() or (CoreGui:FindFirstChild("RobloxGui") or LocalPlayer:WaitForChild("PlayerGui"))
+local SCRIPT_VERSION = "KD BRUTAL V12 [ULTRA UPGRADE]"
+local FIREBASE_URL = "https://darkgamingyt-1c438-default-rtdb.firebaseio.com"
+local FONT_MAIN = Enum.Font.Code
 
--- Remove instâncias antigas se houver
-if guiParent:FindFirstChild("DarkGamingYT_ProHub") then
-	guiParent.DarkGamingYT_ProHub:Destroy()
-end
+-- Paleta de Cores Estilo Cemitério / Roxo Halloween & Ciano Neon
+local COLOR_BG = Color3.fromRGB(10, 8, 14)
+local COLOR_PANEL = Color3.fromRGB(16, 12, 22)
+local COLOR_ITEM = Color3.fromRGB(24, 18, 34)
+local COLOR_ACCENT = Color3.fromRGB(190, 0, 255)    -- Roxo Cemitério
+local COLOR_SECONDARY = Color3.fromRGB(0, 255, 240) -- Ciano Brilhante
+local COLOR_BORDER = Color3.fromRGB(75, 30, 110)
+local COLOR_TEXT = Color3.fromRGB(245, 240, 255)
+local COLOR_SUBTEXT = Color3.fromRGB(160, 140, 190)
+local COLOR_WARN = Color3.fromRGB(255, 205, 75)     -- Alerta Risco Ban 24h
+local COLOR_OFF = Color3.fromRGB(255, 75, 75)
+local COLOR_ON = Color3.fromRGB(75, 255, 140)
 
--- ==========================================================================
--- EFEITOS SONOROS
--- ==========================================================================
-local function PlayClickSound()
-	task.spawn(function()
-		local sound = Instance.new("Sound")
-		sound.SoundId = "rbxassetid://6895079853"
-		sound.Volume = 0.5
-		sound.Parent = SoundService
-		sound:Play()
-		sound.Ended:Wait()
-		sound:Destroy()
-	end)
-end
+-- Compatibilidade de requisição HTTP para o Firebase
+local httpRequest = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
 
-local function PlayTabSound()
-	task.spawn(function()
-		local sound = Instance.new("Sound")
-		sound.SoundId = "rbxassetid://9114223179"
-		sound.Volume = 0.4
-		sound.Parent = SoundService
-		sound:Play()
-		sound.Ended:Wait()
-		sound:Destroy()
-	end)
-end
+-- Limpeza de versão anterior
+pcall(function()
+	if CoreGui:FindFirstChild("KD_Brutal_V12") then CoreGui.KD_Brutal_V12:Destroy() end
+	if LocalPlayer.PlayerGui:FindFirstChild("KD_Brutal_V12") then LocalPlayer.PlayerGui.KD_Brutal_V12:Destroy() end
+	if gethui and gethui():FindFirstChild("KD_Brutal_V12") then gethui().KD_Brutal_V12:Destroy() end
+end)
 
--- ==========================================================================
--- 1. Interface Gráfica / Main Frame
--- ==========================================================================
+-- Criação segura do ScreenGui
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "DarkGamingYT_ProHub"
-ScreenGui.Parent = guiParent
+ScreenGui.Name = "KD_Brutal_V12"
 ScreenGui.ResetOnSpawn = false
+ScreenGui.IgnoreGuiInset = true
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-local MainFrame = Instance.new("Frame")
-MainFrame.Name = "MainFrame"
-MainFrame.Parent = ScreenGui
-MainFrame.BackgroundColor3 = Color3.fromRGB(12, 16, 14)
-MainFrame.BorderSizePixel = 0
-MainFrame.Position = UDim2.new(0.2, 0, 0.15, 0)
-MainFrame.Size = UDim2.new(0, 420, 0, 500)
-MainFrame.Active = true
-MainFrame.Draggable = true
-MainFrame.ClipsDescendants = true
-
-local Corner = Instance.new("UICorner")
-Corner.CornerRadius = UDim.new(0, 8)
-Corner.Parent = MainFrame
-
-local MainRGB = Instance.new("UIStroke")
-MainRGB.Parent = MainFrame
-MainRGB.Thickness = 1.5
-MainRGB.Color = Color3.fromRGB(0, 255, 102)
-
-task.spawn(function()
-	local pulse = 0
-	while task.wait() do
-		pulse = (pulse + 0.03) % (math.pi * 2)
-		local greenVal = 0.6 + math.sin(pulse) * 0.4
-		MainRGB.Color = Color3.fromRGB(10, math.floor(greenVal * 255), 80)
-	end
-end)
-
--- Header / Barra Superior
-local TitleBar = Instance.new("Frame")
-TitleBar.Name = "TitleBar"
-TitleBar.Parent = MainFrame
-TitleBar.BackgroundColor3 = Color3.fromRGB(16, 22, 18)
-TitleBar.BorderSizePixel = 0
-TitleBar.Size = UDim2.new(1, 0, 0, 40)
-
-local TitleCorner = Instance.new("UICorner")
-TitleCorner.CornerRadius = UDim.new(0, 8)
-TitleCorner.Parent = TitleBar
-
-local TitleLabel = Instance.new("TextLabel")
-TitleLabel.Parent = TitleBar
-TitleLabel.BackgroundTransparency = 1.000
-TitleLabel.Position = UDim2.new(0.04, 0, 0, 0)
-TitleLabel.Size = UDim2.new(0.6, 0, 1, 0)
-TitleLabel.Font = Enum.Font.GothamBold
-TitleLabel.Text = "DARKGAMINGYT  |  ZOMBIES"
-TitleLabel.TextColor3 = Color3.fromRGB(0, 255, 102)
-TitleLabel.TextSize = 13.000
-TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-
-local ClockLabel = Instance.new("TextLabel")
-ClockLabel.Name = "ClockLabel"
-ClockLabel.Parent = TitleBar
-ClockLabel.BackgroundTransparency = 1.000
-ClockLabel.Position = UDim2.new(0.55, 0, 0, 0)
-ClockLabel.Size = UDim2.new(0.20, 0, 1, 0)
-ClockLabel.Font = Enum.Font.Code
-ClockLabel.Text = "00:00:00"
-ClockLabel.TextColor3 = Color3.fromRGB(160, 220, 180)
-ClockLabel.TextSize = 10.000
-ClockLabel.TextXAlignment = Enum.TextXAlignment.Right
-
-task.spawn(function()
-	while task.wait(1) do
-		ClockLabel.Text = os.date("%H:%M:%S")
-	end
-end)
-
-local ButtonHolder = Instance.new("Frame")
-ButtonHolder.Name = "ButtonHolder"
-ButtonHolder.Parent = TitleBar
-ButtonHolder.BackgroundTransparency = 1.000
-ButtonHolder.Position = UDim2.new(1, -60, 0, 8)
-ButtonHolder.Size = UDim2.new(0, 50, 0, 24)
-
-local UIListLayout_Title = Instance.new("UIListLayout")
-UIListLayout_Title.Parent = ButtonHolder
-UIListLayout_Title.FillDirection = Enum.FillDirection.Horizontal
-UIListLayout_Title.HorizontalAlignment = Enum.HorizontalAlignment.Right
-UIListLayout_Title.SortOrder = Enum.SortOrder.LayoutOrder
-UIListLayout_Title.Padding = UDim.new(0, 4)
-
-local function CreateTitleButton(text, callback)
-	local btn = Instance.new("TextButton")
-	btn.Name = text
-	btn.Parent = ButtonHolder
-	btn.BackgroundColor3 = Color3.fromRGB(24, 32, 26)
-	btn.BorderSizePixel = 0
-	btn.Size = UDim2.new(0, 22, 0, 22)
-	btn.Font = Enum.Font.GothamBold
-	btn.Text = text
-	btn.TextColor3 = Color3.fromRGB(0, 255, 102)
-	btn.TextSize = 11.000
-	
-	local btnCorner = Instance.new("UICorner")
-	btnCorner.CornerRadius = UDim.new(0, 4)
-	btnCorner.Parent = btn
-	
-	btn.MouseButton1Click:Connect(function()
-		PlayClickSound()
-		callback()
-	end)
-	return btn
-end
-
--- Barra de Abas
-local TabBar = Instance.new("Frame")
-TabBar.Name = "TabBar"
-TabBar.Parent = MainFrame
-TabBar.BackgroundColor3 = Color3.fromRGB(14, 18, 16)
-TabBar.BorderSizePixel = 0
-TabBar.Position = UDim2.new(0, 0, 0, 40)
-TabBar.Size = UDim2.new(1, 0, 0, 36)
-
-local UIListLayout_Tabs = Instance.new("UIListLayout")
-UIListLayout_Tabs.Parent = TabBar
-UIListLayout_Tabs.FillDirection = Enum.FillDirection.Horizontal
-UIListLayout_Tabs.SortOrder = Enum.SortOrder.LayoutOrder
-
-local PagesFolder = Instance.new("Folder")
-PagesFolder.Name = "PagesFolder"
-PagesFolder.Parent = MainFrame
-
-local function CreatePage()
-	local page = Instance.new("ScrollingFrame")
-	page.Parent = PagesFolder
-	page.BackgroundTransparency = 1.000
-	page.BorderSizePixel = 0
-	page.Position = UDim2.new(0, 0, 0, 80)
-	page.Size = UDim2.new(1, 0, 1, -85)
-	page.CanvasSize = UDim2.new(0, 0, 0, 520)
-	page.ScrollBarThickness = 3
-	page.ScrollBarImageColor3 = Color3.fromRGB(0, 255, 102)
-	page.Visible = false
-
-	local layout = Instance.new("UIListLayout")
-	layout.Parent = page
-	layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-	layout.SortOrder = Enum.SortOrder.LayoutOrder
-	layout.Padding = UDim.new(0, 8)
-	return page
-end
-
-local combatPage = CreatePage()
-local movementPage = CreatePage()
-local visualsPage = CreatePage()
-local infoPage = CreatePage()
-
-combatPage.Visible = true
-
-local tabButtons = {}
-local function CreateTabButton(name, targetPage)
-	local tabBtn = Instance.new("TextButton")
-	tabBtn.Parent = TabBar
-	tabBtn.BackgroundColor3 = Color3.fromRGB(14, 18, 16)
-	tabBtn.BorderSizePixel = 0
-	tabBtn.Size = UDim2.new(0.25, 0, 1, 0)
-	tabBtn.Font = Enum.Font.GothamBold
-	tabBtn.Text = name
-	tabBtn.TextColor3 = Color3.fromRGB(120, 140, 130)
-	tabBtn.TextSize = 10.000
-
-	local indicator = Instance.new("Frame")
-	indicator.Name = "Indicator"
-	indicator.Parent = tabBtn
-	indicator.BackgroundColor3 = Color3.fromRGB(0, 255, 102)
-	indicator.BorderSizePixel = 0
-	indicator.Position = UDim2.new(0.1, 0, 1, -2)
-	indicator.Size = UDim2.new(0.8, 0, 0, 2)
-	indicator.Visible = false
-
-	tabBtn.MouseButton1Click:Connect(function()
-		PlayTabSound()
-		combatPage.Visible = false
-		movementPage.Visible = false
-		visualsPage.Visible = false
-		infoPage.Visible = false
-		
-		targetPage.Visible = true
-		
-		for _, btn in pairs(tabButtons) do
-			btn.TextColor3 = Color3.fromRGB(120, 140, 130)
-			btn.BackgroundColor3 = Color3.fromRGB(14, 18, 16)
-			if btn:FindFirstChild("Indicator") then
-				btn.Indicator.Visible = false
-			end
-		end
-		
-		tabBtn.TextColor3 = Color3.fromRGB(0, 255, 102)
-		tabBtn.BackgroundColor3 = Color3.fromRGB(22, 30, 25)
-		indicator.Visible = true
-	end)
-	
-	table.insert(tabButtons, tabBtn)
-	return tabBtn
-end
-
-CreateTabButton("COMBATE", combatPage)
-CreateTabButton("MOVIMENTO", movementPage)
-CreateTabButton("VISUAIS", visualsPage)
-CreateTabButton("INFO", infoPage)
-
-tabButtons[1].TextColor3 = Color3.fromRGB(0, 255, 102)
-tabButtons[1].BackgroundColor3 = Color3.fromRGB(22, 30, 25)
-tabButtons[1].Indicator.Visible = true
-
-local minimized = false
-CreateTitleButton("-", function()
-	minimized = not minimized
-	TabBar.Visible = not minimized
-	PagesFolder.Parent = minimized and nil or MainFrame
-	if minimized then
-		MainFrame.Size = UDim2.new(0, 420, 0, 40)
+local parentSuccess = pcall(function()
+	if gethui then
+		ScreenGui.Parent = gethui()
 	else
-		MainFrame.Size = UDim2.new(0, 420, 0, 500)
+		ScreenGui.Parent = CoreGui
 	end
 end)
+if not parentSuccess or not ScreenGui.Parent then
+	ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+end
 
-CreateTitleButton("X", function()
-	ScreenGui:Destroy()
-	getgenv().ESP_Box = false
-	getgenv().ESP_Line = false
-	getgenv().ESP_Name = false
-	getgenv().ESP_Distance = false
-	getgenv().ESP_Friend = false
-	getgenv().ESP_HealthBar = false
-	getgenv().Noclip_Active = false
-	getgenv().Fly_Active = false
-	getgenv().Aimbot_Active = false
-	getgenv().Speed_Active = false
-end)
+local EspLineFolder = Instance.new("Folder", ScreenGui)
+EspLineFolder.Name = "KD_EspLinesPool"
 
--- ==========================================================================
--- 2. Construtores de Componentes
--- ==========================================================================
-local function CreateToggle(parentPage, text, callback)
-	local toggleContainer = Instance.new("Frame")
-	toggleContainer.Name = text.."Container"
-	toggleContainer.Parent = parentPage
-	toggleContainer.BackgroundColor3 = Color3.fromRGB(18, 24, 20)
-	toggleContainer.BorderSizePixel = 0
-	toggleContainer.Size = UDim2.new(0.92, 0, 0, 42)
-
-	local containerCorner = Instance.new("UICorner")
-	containerCorner.CornerRadius = UDim.new(0, 6)
-	containerCorner.Parent = toggleContainer
-
-	local containerStroke = Instance.new("UIStroke")
-	containerStroke.Parent = toggleContainer
-	containerStroke.Thickness = 1
-	containerStroke.Color = Color3.fromRGB(30, 42, 34)
-
-	local toggleLabel = Instance.new("TextLabel")
-	toggleLabel.Parent = toggleContainer
-	toggleLabel.BackgroundTransparency = 1.000
-	toggleLabel.Position = UDim2.new(0.04, 0, 0, 0)
-	toggleLabel.Size = UDim2.new(0.65, 0, 1, 0)
-	toggleLabel.Font = Enum.Font.GothamMedium
-	toggleLabel.Text = text
-	toggleLabel.TextColor3 = Color3.fromRGB(220, 240, 225)
-	toggleLabel.TextSize = 11.000
-	toggleLabel.TextXAlignment = Enum.TextXAlignment.Left
-
-	local toggleButton = Instance.new("TextButton")
-	toggleButton.Name = "ToggleButton"
-	toggleButton.Parent = toggleContainer
-	toggleButton.BackgroundColor3 = Color3.fromRGB(28, 36, 30)
-	toggleButton.BorderSizePixel = 0
-	toggleButton.Position = UDim2.new(0.72, 0, 0.18, 0)
-	toggleButton.Size = UDim2.new(0.24, 0, 0.64, 0)
-	toggleButton.Font = Enum.Font.GothamBold
-	toggleButton.Text = "OFF"
-	toggleButton.TextColor3 = Color3.fromRGB(255, 70, 70)
-	toggleButton.TextSize = 10.000
-
-	local btnCorner = Instance.new("UICorner")
-	btnCorner.CornerRadius = UDim.new(0, 4)
-	btnCorner.Parent = toggleButton
-
-	local active = false
-	toggleButton.MouseButton1Click:Connect(function()
-		PlayClickSound()
-		active = not active
-		callback(active)
-		if active then
-			toggleButton.BackgroundColor3 = Color3.fromRGB(10, 50, 25)
-			toggleButton.TextColor3 = Color3.fromRGB(0, 255, 102)
-			toggleButton.Text = "ON"
-			containerStroke.Color = Color3.fromRGB(0, 200, 90)
-		else
-			toggleButton.BackgroundColor3 = Color3.fromRGB(28, 36, 30)
-			toggleButton.TextColor3 = Color3.fromRGB(255, 70, 70)
-			toggleButton.Text = "OFF"
-			containerStroke.Color = Color3.fromRGB(30, 42, 34)
-		end
+-- Sistema de Sons (Sound FX para botões e toffles)
+local function playClickSound()
+	pcall(function()
+		local snd = Instance.new("Sound")
+		snd.SoundId = "rbxassetid://6026985050" -- Som de clique limpo do Roblox
+		snd.Volume = 0.5
+		snd.Parent = ScreenGui
+		snd:Play()
+		Debris = game:GetService("Debris")
+		Debris:AddItem(snd, 1)
 	end)
 end
 
-local function CreateMaintenanceToggle(parentPage, text)
-	local toggleContainer = Instance.new("Frame")
-	toggleContainer.Name = text.."Container"
-	toggleContainer.Parent = parentPage
-	toggleContainer.BackgroundColor3 = Color3.fromRGB(24, 20, 20)
-	toggleContainer.BorderSizePixel = 0
-	toggleContainer.Size = UDim2.new(0.92, 0, 0, 42)
-
-	local containerCorner = Instance.new("UICorner")
-	containerCorner.CornerRadius = UDim.new(0, 6)
-	containerCorner.Parent = toggleContainer
-
-	local containerStroke = Instance.new("UIStroke")
-	containerStroke.Parent = toggleContainer
-	containerStroke.Thickness = 1
-	containerStroke.Color = Color3.fromRGB(60, 40, 20)
-
-	local toggleLabel = Instance.new("TextLabel")
-	toggleLabel.Parent = toggleContainer
-	toggleLabel.BackgroundTransparency = 1.000
-	toggleLabel.Position = UDim2.new(0.04, 0, 0, 0)
-	toggleLabel.Size = UDim2.new(0.55, 0, 1, 0)
-	toggleLabel.Font = Enum.Font.GothamMedium
-	toggleLabel.Text = text
-	toggleLabel.TextColor3 = Color3.fromRGB(170, 160, 150)
-	toggleLabel.TextSize = 11.000
-	toggleLabel.TextXAlignment = Enum.TextXAlignment.Left
-
-	local badge = Instance.new("TextLabel")
-	badge.Parent = toggleContainer
-	badge.BackgroundColor3 = Color3.fromRGB(50, 30, 10)
-	badge.BorderSizePixel = 0
-	badge.Position = UDim2.new(0.56, 0, 0.20, 0)
-	badge.Size = UDim2.new(0.40, 0, 0.60, 0)
-	badge.Font = Enum.Font.GothamBold
-	badge.Text = "[EM MANUTENÇÃO]"
-	badge.TextColor3 = Color3.fromRGB(255, 170, 0)
-	badge.TextSize = 8.500
-
-	local badgeCorner = Instance.new("UICorner")
-	badgeCorner.CornerRadius = UDim.new(0, 4)
-	badgeCorner.Parent = badge
+local function applyStroke(parent, color, thickness)
+	local stroke = Instance.new("UIStroke", parent)
+	stroke.Color = color or COLOR_ACCENT
+	stroke.Thickness = thickness or 1.5
+	stroke.LineJoinMode = Enum.LineJoinMode.Miter
+	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	return stroke
 end
 
-local function CreateSlider(parentPage, text, min, max, default, callback)
-	local sliderContainer = Instance.new("Frame")
-	sliderContainer.Name = text.."Slider"
-	sliderContainer.Parent = parentPage
-	sliderContainer.BackgroundColor3 = Color3.fromRGB(18, 24, 20)
-	sliderContainer.BorderSizePixel = 0
-	sliderContainer.Size = UDim2.new(0.92, 0, 0, 50)
-
-	local containerCorner = Instance.new("UICorner")
-	containerCorner.CornerRadius = UDim.new(0, 6)
-	containerCorner.Parent = sliderContainer
-
-	local containerStroke = Instance.new("UIStroke")
-	containerStroke.Parent = sliderContainer
-	containerStroke.Thickness = 1
-	containerStroke.Color = Color3.fromRGB(30, 42, 34)
-
-	local sliderLabel = Instance.new("TextLabel")
-	sliderLabel.Parent = sliderContainer
-	sliderLabel.BackgroundTransparency = 1.000
-	sliderLabel.Position = UDim2.new(0.04, 0, 0, 4)
-	sliderLabel.Size = UDim2.new(0.9, 0, 0, 18)
-	sliderLabel.Font = Enum.Font.GothamMedium
-	sliderLabel.Text = text .. ": " .. default
-	sliderLabel.TextColor3 = Color3.fromRGB(220, 240, 225)
-	sliderLabel.TextSize = 11.000
-	sliderLabel.TextXAlignment = Enum.TextXAlignment.Left
-
-	local sliderBar = Instance.new("Frame")
-	sliderBar.Parent = sliderContainer
-	sliderBar.BackgroundColor3 = Color3.fromRGB(28, 36, 30)
-	sliderBar.BorderSizePixel = 0
-	sliderBar.Position = UDim2.new(0.04, 0, 0, 28)
-	sliderBar.Size = UDim2.new(0.92, 0, 0, 8)
-
-	local barCorner = Instance.new("UICorner")
-	barCorner.CornerRadius = UDim.new(0, 4)
-	barCorner.Parent = sliderBar
-
-	local sliderFill = Instance.new("Frame")
-	sliderFill.Parent = sliderBar
-	sliderFill.BackgroundColor3 = Color3.fromRGB(0, 255, 102)
-	sliderFill.BorderSizePixel = 0
-	sliderFill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
-
-	local fillCorner = Instance.new("UICorner")
-	fillCorner.CornerRadius = UDim.new(0, 4)
-	fillCorner.Parent = sliderFill
-
+local function makeDraggable(dragHandle, targetFrame)
 	local dragging = false
-	sliderBar.InputBegan:Connect(function(input)
+	local dragInput, dragStart, startPos
+
+	dragHandle.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 			dragging = true
+			dragStart = input.Position
+			startPos = targetFrame.Position
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then dragging = false end
+			end)
 		end
 	end)
 
-	UserInputService.InputEnded:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			dragging = false
+	dragHandle.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+			dragInput = input
 		end
 	end)
 
 	UserInputService.InputChanged:Connect(function(input)
-		if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-			local pos = UDim2.new(math.clamp((input.Position.X - sliderBar.AbsolutePosition.X) / sliderBar.AbsoluteSize.X, 0, 1), 0, 1, 0)
-			sliderFill.Size = pos
-			local val = math.floor(min + ((max - min) * pos.X.Scale))
-			sliderLabel.Text = text .. ": " .. val
-			callback(val)
+		if input == dragInput and dragging then
+			local delta = input.Position - dragStart
+			targetFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 		end
 	end)
 end
 
 -- ==========================================================================
--- 3. ABA INFO
+-- BARRA DE CARREGAMENTO INICIAL (LOADING SCREEN ESTILOSA)
 -- ==========================================================================
-local infoFrame = Instance.new("Frame")
-infoFrame.Parent = infoPage
-infoFrame.BackgroundColor3 = Color3.fromRGB(18, 24, 20)
-infoFrame.BorderSizePixel = 0
-infoFrame.Size = UDim2.new(0.92, 0, 0, 190)
+local LoadingFrame = Instance.new("Frame", ScreenGui)
+LoadingFrame.Size = UDim2.new(0, 320, 0, 150)
+LoadingFrame.Position = UDim2.new(0.5, -160, 0.5, -75)
+LoadingFrame.BackgroundColor3 = COLOR_BG
+LoadingFrame.BorderSizePixel = 0
+LoadingFrame.ZIndex = 200
+applyStroke(LoadingFrame, COLOR_SECONDARY, 2)
+Instance.new("UICorner", LoadingFrame).CornerRadius = UDim.new(0, 10)
 
-local infoCorner = Instance.new("UICorner")
-infoCorner.CornerRadius = UDim.new(0, 8)
-infoCorner.Parent = infoFrame
+local LoadTitle = Instance.new("TextLabel", LoadingFrame)
+LoadTitle.Size = UDim2.new(1, -20, 0, 24)
+LoadTitle.Position = UDim2.new(0, 10, 0, 12)
+LoadTitle.BackgroundTransparency = 1
+LoadTitle.Text = "🗡️ KNIFE DUELS // COM2 BRUTAL V12"
+LoadTitle.TextColor3 = COLOR_SECONDARY
+LoadTitle.TextSize = 12
+LoadTitle.Font = FONT_MAIN
+LoadTitle.TextXAlignment = Enum.TextXAlignment.Center
+LoadTitle.ZIndex = 202
 
-local infoStroke = Instance.new("UIStroke")
-infoStroke.Parent = infoFrame
-infoStroke.Thickness = 1
-infoStroke.Color = Color3.fromRGB(0, 255, 102)
+local LoadStatus = Instance.new("TextLabel", LoadingFrame)
+LoadStatus.Size = UDim2.new(1, -20, 0, 20)
+LoadStatus.Position = UDim2.new(0, 10, 0, 50)
+LoadStatus.BackgroundTransparency = 1
+LoadStatus.Text = "Iniciando sistema e conexões..."
+LoadStatus.TextColor3 = COLOR_SUBTEXT
+LoadStatus.TextSize = 10
+LoadStatus.Font = FONT_MAIN
+LoadStatus.TextXAlignment = Enum.TextXAlignment.Left
+LoadStatus.ZIndex = 202
 
-local channelTitle = Instance.new("TextLabel")
-channelTitle.Parent = infoFrame
-channelTitle.BackgroundTransparency = 1
-channelTitle.Position = UDim2.new(0, 0, 0, 14)
-channelTitle.Size = UDim2.new(1, 0, 0, 22)
-channelTitle.Font = Enum.Font.GothamBold
-channelTitle.Text = "CANAL OFICIAL // DARKGAMINGYT"
-channelTitle.TextColor3 = Color3.fromRGB(0, 255, 102)
-channelTitle.TextSize = 14
+local LoadBarBg = Instance.new("Frame", LoadingFrame)
+LoadBarBg.Size = UDim2.new(1, -24, 0, 16)
+LoadBarBg.Position = UDim2.new(0, 12, 0, 85)
+LoadBarBg.BackgroundColor3 = COLOR_PANEL
+LoadBarBg.BorderSizePixel = 0
+LoadBarBg.ZIndex = 202
+applyStroke(LoadBarBg, COLOR_BORDER, 1)
+Instance.new("UICorner", LoadBarBg).CornerRadius = UDim.new(0, 6)
 
-local channelSub = Instance.new("TextLabel")
-channelSub.Parent = infoFrame
-channelSub.BackgroundTransparency = 1
-channelSub.Position = UDim2.new(0, 0, 0, 38)
-channelSub.Size = UDim2.new(1, 0, 0, 18)
-channelSub.Font = Enum.Font.Gotham
-channelSub.Text = "youtube.com/@wallacy_rtx"
-channelSub.TextColor3 = Color3.fromRGB(200, 220, 210)
-channelSub.TextSize = 11
+local LoadBarFill = Instance.new("Frame", LoadBarBg)
+LoadBarFill.Size = UDim2.new(0, 0, 1, 0)
+LoadBarFill.BackgroundColor3 = COLOR_ACCENT
+LoadBarFill.BorderSizePixel = 0
+LoadBarFill.ZIndex = 203
+Instance.new("UICorner", LoadBarFill).CornerRadius = UDim.new(0, 5)
 
-local copyBtn = Instance.new("TextButton")
-copyBtn.Parent = infoFrame
-copyBtn.BackgroundColor3 = Color3.fromRGB(24, 50, 32)
-copyBtn.BorderSizePixel = 0
-copyBtn.Position = UDim2.new(0.1, 0, 0.42, 0)
-copyBtn.Size = UDim2.new(0.8, 0, 0, 36)
-copyBtn.Font = Enum.Font.GothamBold
-copyBtn.Text = "COPIAR LINK DO CANAL"
-copyBtn.TextColor3 = Color3.fromRGB(0, 255, 102)
-copyBtn.TextSize = 11
+-- Painel Principal (Inicia oculto até o carregamento completar)
+local MainFrame = Instance.new("Frame", ScreenGui)
+MainFrame.Size = UDim2.new(0, 420, 0, 470)
+MainFrame.Position = UDim2.new(0.5, -210, 0.5, -235)
+MainFrame.BackgroundColor3 = COLOR_BG
+MainFrame.BorderSizePixel = 0
+MainFrame.Visible = false
+MainFrame.ZIndex = 80
+applyStroke(MainFrame, COLOR_ACCENT, 2)
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
 
-local copyCorner = Instance.new("UICorner")
-copyCorner.CornerRadius = UDim.new(0, 6)
-copyCorner.Parent = copyBtn
+local FloatContainer = Instance.new("Frame", ScreenGui)
+FloatContainer.Size = UDim2.fromOffset(120, 56)
+FloatContainer.Position = UDim2.new(0.5, -340, 0.5, -235)
+FloatContainer.BackgroundColor3 = COLOR_BG
+FloatContainer.BorderSizePixel = 0
+FloatContainer.Visible = false
+FloatContainer.ZIndex = 100
+applyStroke(FloatContainer, COLOR_ACCENT, 2)
+Instance.new("UICorner", FloatContainer).CornerRadius = UDim.new(0, 8)
 
-copyBtn.MouseButton1Click:Connect(function()
-	PlayClickSound()
-	pcall(function()
-		setclipboard("https://www.youtube.com/@wallacy_rtx")
-	end)
-	copyBtn.Text = "LINK COPIADO!"
-	task.wait(2)
-	copyBtn.Text = "COPIAR LINK DO CANAL"
+local FpsLabel = Instance.new("TextLabel", FloatContainer)
+FpsLabel.Size = UDim2.new(1, 0, 0, 18)
+FpsLabel.Position = UDim2.new(0, 0, 0, 2)
+FpsLabel.BackgroundTransparency = 1
+FpsLabel.Text = "FPS: 60"
+FpsLabel.TextColor3 = COLOR_SECONDARY
+FpsLabel.TextSize = 10
+FpsLabel.Font = FONT_MAIN
+FpsLabel.TextXAlignment = Enum.TextXAlignment.Center
+FpsLabel.ZIndex = 102
+
+local FloatBtn = Instance.new("TextButton", FloatContainer)
+FloatBtn.Size = UDim2.new(1, -6, 0, 30)
+FloatBtn.Position = UDim2.new(0, 3, 0, 22)
+FloatBtn.BackgroundColor3 = COLOR_PANEL
+FloatBtn.BorderSizePixel = 0
+FloatBtn.Text = "🗡️ KD V12"
+FloatBtn.TextColor3 = COLOR_ACCENT
+FloatBtn.TextSize = 11
+FloatBtn.Font = FONT_MAIN
+FloatBtn.ZIndex = 101
+applyStroke(FloatBtn, COLOR_BORDER, 1)
+Instance.new("UICorner", FloatBtn).CornerRadius = UDim.new(0, 6)
+
+makeDraggable(FloatBtn, FloatContainer)
+
+-- Sequência de Carregamento com Barra
+task.spawn(function()
+	local stages = {
+		{pct = 0.30, txt = "Carregando modulos de ESP & Aimbot... [30%]"},
+		{pct = 0.65, txt = "Sincronizando com Firebase Server... [65%]"},
+		{pct = 0.90, txt = "Aplicando Bypass Anti-Kick... [90%]"},
+		{pct = 1.00, txt = "Sistema pronto! Bem-vindo ao KD V12 [100%]"}
+	}
+	for _, st in ipairs(stages) do
+		LoadStatus.Text = st.txt
+		TweenService:Create(LoadBarFill, TweenInfo.new(0.3, Enum.EasingStyle.Linear), {
+			Size = UDim2.new(st.pct, 0, 1, 0)
+		}):Play()
+		task.wait(0.35)
+	end
+	task.wait(0.2)
+	LoadingFrame:Destroy()
+	MainFrame.Visible = true
+	FloatContainer.Visible = true
+	playClickSound()
 end)
 
--- ==========================================================================
--- 4. REGISTRO DE OPÇÕES NAS ABAS (TESTADO E FUNCIONAL)
--- ==========================================================================
-
--- ABA COMBATE
-CreateMaintenanceToggle(combatPage, "Auto-Kill Boss / Zumbis")
-
-getgenv().Aimbot_Active = false
-getgenv().Aimbot_Smoothness = 12
-
-CreateToggle(combatPage, "Aimbot (Auto-Lock Suave)", function(state)
-	getgenv().Aimbot_Active = state
-end)
-
-CreateSlider(combatPage, "Suavidade do Aimbot", 1, 30, 12, function(val)
-	getgenv().Aimbot_Smoothness = val
-end)
-
--- ABA MOVIMENTO
-getgenv().Speed_Active = false
-getgenv().Speed_Value = 30
-
-CreateToggle(movementPage, "Ativar Velocidade (Speed)", function(state)
-	getgenv().Speed_Active = state
-	if not state and LocalPlayer.Character then
-		local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-		if hum then hum.WalkSpeed = 16 end
+-- Contador real de FPS
+local fpsFrames = 0
+local fpsLastTick = tick()
+RunService.RenderStepped:Connect(function()
+	fpsFrames = fpsFrames + 1
+	local now = tick()
+	if now - fpsLastTick >= 1 then
+		local currentFps = math.floor(fpsFrames / (now - fpsLastTick))
+		FpsLabel.Text = string.format("FPS: %d", currentFps)
+		fpsFrames = 0
+		fpsLastTick = now
 	end
 end)
 
-CreateSlider(movementPage, "Valor da Velocidade", 16, 150, 30, function(val)
-	getgenv().Speed_Value = val
+FloatContainer:GetPropertyChangedSignal("Position"):Connect(function()
+	local fPos = FloatContainer.Position
+	MainFrame.Position = UDim2.new(fPos.X.Scale, fPos.X.Offset + 128, fPos.Y.Scale, fPos.Y.Offset)
 end)
 
-getgenv().Fly_Active = false
-local flySpeed = 50
-local bv, bg
+FloatBtn.MouseButton1Click:Connect(function()
+	playClickSound()
+	MainFrame.Visible = not MainFrame.Visible
+	FloatBtn.TextColor3 = MainFrame.Visible and COLOR_ON or COLOR_SUBTEXT
+end)
 
-CreateToggle(movementPage, "Modo Voo (Fly Hack)", function(state)
-	getgenv().Fly_Active = state
-	local character = LocalPlayer.Character
-	if not character or not character:FindFirstChild("HumanoidRootPart") then return end
-	local hrp = character.HumanoidRootPart
-	local humanoid = character:FindFirstChildOfClass("Humanoid")
+local TopBar = Instance.new("Frame", MainFrame)
+TopBar.Size = UDim2.new(1, 0, 0, 38)
+TopBar.BackgroundColor3 = COLOR_PANEL
+TopBar.BorderSizePixel = 0
+TopBar.ZIndex = 82
+applyStroke(TopBar, COLOR_BORDER, 1)
+Instance.new("UICorner", TopBar).CornerRadius = UDim.new(0, 10)
 
-	if state then
-		bv = Instance.new("BodyVelocity")
-		bv.Name = "ProFlyVelocity"
-		bv.Parent = hrp
-		bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-		bv.Velocity = Vector3.new(0, 0, 0)
+local TitleLabel = Instance.new("TextLabel", TopBar)
+TitleLabel.Size = UDim2.new(1, -20, 1, 0)
+TitleLabel.Position = UDim2.new(0, 12, 0, 0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "🗡️ KNIFE DUELS // @wallacy_rtx"
+TitleLabel.TextColor3 = COLOR_ACCENT
+TitleLabel.TextSize = 10
+TitleLabel.Font = FONT_MAIN
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.ZIndex = 83
 
-		bg = Instance.new("BodyGyro")
-		bg.Name = "ProFlyGyro"
-		bg.Parent = hrp
-		bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-		bg.CFrame = hrp.CFrame
+-- 5 Abas: [BYPASS] | [ESP MOD] | [AIMBOT] | [GERAL] | [SITE & DC]
+local TabHeader = Instance.new("Frame", MainFrame)
+TabHeader.Size = UDim2.new(1, -20, 0, 32)
+TabHeader.Position = UDim2.new(0, 10, 0, 48)
+TabHeader.BackgroundColor3 = COLOR_PANEL
+TabHeader.BorderSizePixel = 0
+TabHeader.ZIndex = 82
+applyStroke(TabHeader, COLOR_BORDER, 1)
+Instance.new("UICorner", TabHeader).CornerRadius = UDim.new(0, 6)
 
-		if humanoid then humanoid.PlatformStand = true end
+local function createTabBtn(name, posX, active)
+	local btn = Instance.new("TextButton", TabHeader)
+	btn.Size = UDim2.new(0.19, 0, 0.8, 0)
+	btn.Position = UDim2.new(posX, 0, 0.1, 0)
+	btn.BackgroundColor3 = active and COLOR_SECONDARY or COLOR_ITEM
+	btn.BorderSizePixel = 0
+	btn.TextColor3 = active and COLOR_TEXT or COLOR_SUBTEXT
+	btn.TextSize = 8
+	btn.Font = FONT_MAIN
+	btn.Text = name
+	btn.ZIndex = 83
+	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
+	applyStroke(btn, active and COLOR_ACCENT or COLOR_BORDER, 1)
+	return btn
+end
 
-		task.spawn(function()
-			while getgenv().Fly_Active and character.Parent do
-				local cam = workspace.CurrentCamera
-				local moveDir = Vector3.new(0, 0, 0)
-				
-				if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + cam.CFrame.LookVector end
-				if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir - cam.CFrame.LookVector end
-				if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir - cam.CFrame.RightVector end
-				if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + cam.CFrame.RightVector end
-				if UserInputService:IsKeyDown(Enum.KeyCode.Space) then moveDir = moveDir + Vector3.new(0, 1, 0) end
-				if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then moveDir = moveDir - Vector3.new(0, 1, 0) end
+local btnBypass = createTabBtn("BYPASS", 0.01, true)
+local btnEsp = createTabBtn("ESP MOD", 0.21, false)
+local btnAim = createTabBtn("AIMBOT", 0.41, false)
+local btnGeral = createTabBtn("GERAL", 0.61, false)
+local btnSocial = createTabBtn("SITE & DC", 0.81, false)
 
-				if bv and bg then
-					bv.Velocity = moveDir * flySpeed
-					bg.CFrame = cam.CFrame
-				end
-				RunService.RenderStepped:Wait()
+local ContentContainer = Instance.new("Frame", MainFrame)
+ContentContainer.Size = UDim2.new(1, -20, 1, -114)
+ContentContainer.Position = UDim2.new(0, 10, 0, 88)
+ContentContainer.BackgroundTransparency = 1
+ContentContainer.ZIndex = 82
+
+local function createScroll()
+	local scroll = Instance.new("ScrollingFrame", ContentContainer)
+	scroll.Size = UDim2.new(1, 0, 1, 0)
+	scroll.BackgroundTransparency = 1
+	scroll.BorderSizePixel = 0
+	scroll.ScrollBarThickness = 3
+	scroll.ScrollBarImageColor3 = COLOR_ACCENT
+	scroll.Visible = false
+	scroll.ZIndex = 82
+	scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+	
+	local list = Instance.new("UIListLayout", scroll)
+	list.Padding = UDim.new(0, 8)
+	list.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	
+	local pad = Instance.new("UIPadding", scroll)
+	pad.PaddingTop = UDim.new(0, 2)
+	pad.PaddingBottom = UDim.new(0, 8)
+	pad.PaddingLeft = UDim.new(0, 2)
+	pad.PaddingRight = UDim.new(0, 6)
+	return scroll
+end
+
+local panelBypass = createScroll()
+local panelEsp = createScroll()
+local panelAim = createScroll()
+local panelGeral = createScroll()
+local panelSocial = createScroll()
+panelBypass.Visible = true
+
+local function selectTab(selected)
+	playClickSound()
+	panelBypass.Visible = (selected == panelBypass)
+	panelEsp.Visible = (selected == panelEsp)
+	panelAim.Visible = (selected == panelAim)
+	panelGeral.Visible = (selected == panelGeral)
+	panelSocial.Visible = (selected == panelSocial)
+	
+	local tabs = {
+		{btn = btnBypass, panel = panelBypass},
+		{btn = btnEsp, panel = panelEsp},
+		{btn = btnAim, panel = panelAim},
+		{btn = btnGeral, panel = panelGeral},
+		{btn = btnSocial, panel = panelSocial}
+	}
+	for _, t in ipairs(tabs) do
+		local isSel = (t.panel == selected)
+		t.btn.BackgroundColor3 = isSel and COLOR_SECONDARY or COLOR_ITEM
+		t.btn.TextColor3 = isSel and COLOR_TEXT or COLOR_SUBTEXT
+		local st = t.btn:FindFirstChildOfClass("UIStroke")
+		if st then st.Color = isSel and COLOR_ACCENT or COLOR_BORDER end
+	end
+end
+
+btnBypass.MouseButton1Click:Connect(function() selectTab(panelBypass) end)
+btnEsp.MouseButton1Click:Connect(function() selectTab(panelEsp) end)
+btnAim.MouseButton1Click:Connect(function() selectTab(panelAim) end)
+btnGeral.MouseButton1Click:Connect(function() selectTab(panelGeral) end)
+btnSocial.MouseButton1Click:Connect(function() selectTab(panelSocial) end)
+
+-- Rodapé com créditos
+local FooterBar = Instance.new("Frame", MainFrame)
+FooterBar.Size = UDim2.new(1, -20, 0, 24)
+FooterBar.Position = UDim2.new(0, 10, 1, -28)
+FooterBar.BackgroundColor3 = COLOR_PANEL
+FooterBar.BorderSizePixel = 0
+FooterBar.ZIndex = 82
+applyStroke(FooterBar, COLOR_BORDER, 1)
+Instance.new("UICorner", FooterBar).CornerRadius = UDim.new(0, 6)
+
+local CreditLabel = Instance.new("TextLabel", FooterBar)
+CreditLabel.Size = UDim2.new(1, 0, 1, 0)
+CreditLabel.BackgroundTransparency = 1
+CreditLabel.Text = "Site: darkgamingyt-br-pt.netlify.app"
+CreditLabel.TextColor3 = COLOR_SECONDARY
+CreditLabel.TextSize = 9
+CreditLabel.Font = FONT_MAIN
+CreditLabel.TextXAlignment = Enum.TextXAlignment.Center
+CreditLabel.ZIndex = 83
+
+local function createToggle(parent, name, callback, desc, isRisky)
+	local hasDesc = (desc ~= nil and desc ~= "")
+	local row = Instance.new("Frame", parent)
+	row.Size = UDim2.new(1, 0, 0, hasDesc and 48 or 36)
+	row.BackgroundColor3 = COLOR_PANEL
+	row.BorderSizePixel = 0
+	row.ZIndex = 83
+	Instance.new("UICorner", row).CornerRadius = UDim.new(0, 6)
+	applyStroke(row, isRisky and COLOR_WARN or COLOR_BORDER, 1)
+	
+	local label = Instance.new("TextLabel", row)
+	label.Size = UDim2.new(0.68, 0, 0, 20)
+	label.Position = UDim2.new(0, 10, 0, hasDesc and 4 or 8)
+	label.BackgroundTransparency = 1
+	label.Text = "> " .. name
+	label.TextColor3 = COLOR_TEXT
+	label.TextSize = 11
+	label.Font = FONT_MAIN
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.ZIndex = 84
+
+	if hasDesc then
+		local descLbl = Instance.new("TextLabel", row)
+		descLbl.Size = UDim2.new(0.68, 0, 0, 16)
+		descLbl.Position = UDim2.new(0, 10, 0, 24)
+		descLbl.BackgroundTransparency = 1
+		descLbl.Text = desc
+		descLbl.TextColor3 = isRisky and COLOR_WARN or COLOR_SUBTEXT
+		descLbl.TextSize = 9
+		descLbl.Font = FONT_MAIN
+		descLbl.TextXAlignment = Enum.TextXAlignment.Left
+		descLbl.ZIndex = 84
+	end
+	
+	local statusBtn = Instance.new("TextButton", row)
+	statusBtn.Size = UDim2.new(0, 64, 0, 22)
+	statusBtn.Position = UDim2.new(1, -72, 0.5, -11)
+	statusBtn.BackgroundColor3 = COLOR_ITEM
+	statusBtn.BorderSizePixel = 0
+	statusBtn.Text = "[ OFF ]"
+	statusBtn.TextColor3 = COLOR_OFF
+	statusBtn.TextSize = 10
+	statusBtn.Font = FONT_MAIN
+	statusBtn.ZIndex = 84
+	Instance.new("UICorner", statusBtn).CornerRadius = UDim.new(0, 4)
+	local btnStroke = applyStroke(statusBtn, COLOR_OFF, 1)
+	
+	local state = false
+	statusBtn.MouseButton1Click:Connect(function()
+		playClickSound()
+		state = not state
+		if state then
+			statusBtn.BackgroundColor3 = Color3.fromRGB(20, 50, 35)
+			statusBtn.TextColor3 = COLOR_ON
+			statusBtn.Text = "[ ON ]"
+			btnStroke.Color = COLOR_ON
+		else
+			statusBtn.BackgroundColor3 = COLOR_ITEM
+			statusBtn.TextColor3 = COLOR_OFF
+			statusBtn.Text = "[ OFF ]"
+			btnStroke.Color = COLOR_OFF
+		end
+		callback(state)
+	end)
+end
+
+-- ==========================================================================
+-- CONTEÚDO DA ABA SOCIAL (SITE OFICIAL, YOUTUBE & DISCORD)
+-- ==========================================================================
+local function createSocialCard(parent, title, url, desc)
+	local card = Instance.new("Frame", parent)
+	card.Size = UDim2.new(1, 0, 0, 75)
+	card.BackgroundColor3 = COLOR_PANEL
+	card.BorderSizePixel = 0
+	card.ZIndex = 83
+	Instance.new("UICorner", card).CornerRadius = UDim.new(0, 6)
+	applyStroke(card, COLOR_SECONDARY, 1)
+
+	local titleLbl = Instance.new("TextLabel", card)
+	titleLbl.Size = UDim2.new(1, -16, 0, 22)
+	titleLbl.Position = UDim2.new(0, 10, 0, 6)
+	titleLbl.BackgroundTransparency = 1
+	titleLbl.Text = title
+	titleLbl.TextColor3 = COLOR_SECONDARY
+	titleLbl.TextSize = 12
+	titleLbl.Font = FONT_MAIN
+	titleLbl.TextXAlignment = Enum.TextXAlignment.Left
+	titleLbl.ZIndex = 84
+
+	local descLbl = Instance.new("TextLabel", card)
+	descLbl.Size = UDim2.new(1, -16, 0, 16)
+	descLbl.Position = UDim2.new(0, 10, 0, 26)
+	descLbl.BackgroundTransparency = 1
+	descLbl.Text = desc
+	descLbl.TextColor3 = COLOR_SUBTEXT
+	descLbl.TextSize = 9
+	descLbl.Font = FONT_MAIN
+	descLbl.TextXAlignment = Enum.TextXAlignment.Left
+	descLbl.ZIndex = 84
+
+	local copyBtn = Instance.new("TextButton", card)
+	copyBtn.Size = UDim2.new(1, -20, 0, 24)
+	copyBtn.Position = UDim2.new(0, 10, 0, 44)
+	copyBtn.BackgroundColor3 = COLOR_ITEM
+	copyBtn.BorderSizePixel = 0
+	copyBtn.Text = "[ COPIAR LINK ]"
+	copyBtn.TextColor3 = COLOR_TEXT
+	copyBtn.TextSize = 10
+	copyBtn.Font = FONT_MAIN
+	copyBtn.ZIndex = 84
+	Instance.new("UICorner", copyBtn).CornerRadius = UDim.new(0, 4)
+	applyStroke(copyBtn, COLOR_ACCENT, 1)
+
+	copyBtn.MouseButton1Click:Connect(function()
+		playClickSound()
+		pcall(function()
+			setclipboard(url)
+		end)
+		copyBtn.Text = "[ LINK COPIADO! ]"
+		task.wait(2)
+		copyBtn.Text = "[ COPIAR LINK ]"
+	end)
+end
+
+createSocialCard(panelSocial, "🌐 Site Oficial DarkGamingYT", "https://darkgamingyt-br-pt.netlify.app/", "Acesse nosso portal oficial para novidades e downloads!")
+createSocialCard(panelSocial, "📺 Canal do YouTube (@wallacy_rtx)", "https://youtube.com/@wallacy_rtx?si=oA06X6BtQqJHAJuY", "Inscreva-se para tutoriais e novos scripts atualizados!")
+createSocialCard(panelSocial, "💬 Servidor do Discord Oficial", "https://discord.com/invite/vzMRuAs6gt", "Entre na comunidade para suporte e novidades!")
+
+-- ==========================================================================
+-- LÓGICA V12 (FIREBASE UPDATE + AUTO-KILL INIMIGO TEST + SOUND + ESP + AIMBOT)
+-- ==========================================================================
+_G.KD_BypassAntiKick = false
+_G.KD_EspHighlight = false
+_G.KD_EspName = false
+_G.KD_EspLine = false
+_G.KD_EspDistance = false
+_G.KD_AimbotHS = false
+_G.KD_SpeedOn = false
+_G.KD_WallHack = false
+_G.KD_AutoKillTest = false
+_G.KD_FullBright = false
+
+-- Conexão Firebase Atualizada
+task.spawn(function()
+	if httpRequest then
+		pcall(function()
+			local payload = {
+				usuario = LocalPlayer.Name,
+				id = LocalPlayer.UserId,
+				jogo = "Knife Duels",
+				versao = SCRIPT_VERSION,
+				data = os.date("%d/%m/%Y %H:%M:%S")
+			}
+			httpRequest({
+				Url = FIREBASE_URL .. "/knife_duels_users/" .. tostring(LocalPlayer.UserId) .. ".json",
+				Method = "PUT",
+				Headers = {["Content-Type"] = "application/json"},
+				Body = HttpService:JSONEncode(payload)
+			})
+		end)
+	end
+end)
+
+RunService.Heartbeat:Connect(function()
+	if _G.KD_BypassAntiKick then
+		pcall(function()
+			local char = LocalPlayer.Character
+			local root = char and char:FindFirstChild("HumanoidRootPart")
+			if root then
+				root.AssemblyLinearVelocity = Vector3.zero
+				root.AssemblyAngularVelocity = Vector3.zero
 			end
 		end)
-	else
-		if bv then bv:Destroy() end
-		if bg then bg:Destroy() end
-		if humanoid then humanoid.PlatformStand = false end
 	end
 end)
 
-getgenv().Noclip_Active = false
-CreateToggle(movementPage, "Atravessar Paredes (Noclip)", function(state)
-	getgenv().Noclip_Active = state
+RunService.RenderStepped:Connect(function()
+	if _G.KD_SpeedOn then
+		pcall(function()
+			local char = LocalPlayer.Character
+			local hum = char and char:FindFirstChildOfClass("Humanoid")
+			local root = char and char:FindFirstChild("HumanoidRootPart")
+			if hum then hum.WalkSpeed = 32 end
+			if root and hum and hum.MoveDirection.Magnitude > 0 then
+				root.CFrame = root.CFrame + (hum.MoveDirection * 0.45)
+			end
+		end)
+	end
 end)
 
 RunService.Stepped:Connect(function()
-	if getgenv().Noclip_Active and LocalPlayer.Character then
-		for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
-			if part:IsA("BasePart") then
-				part.CanCollide = false
+	if _G.KD_WallHack then
+		pcall(function()
+			local char = LocalPlayer.Character
+			if char then
+				for _, part in ipairs(char:GetDescendants()) do
+					if part:IsA("BasePart") then part.CanCollide = false end
+				end
 			end
+		end)
+	end
+end)
+
+-- Nova Função: Auto - Kill Inimigo Test (Zera HP de inimigos próximos instantaneamente)
+task.spawn(function()
+	while task.wait(0.15) do
+		if _G.KD_AutoKillTest then
+			pcall(function()
+				local char = LocalPlayer.Character
+				local root = char and char:FindFirstChild("HumanoidRootPart")
+				if root then
+					for _, plr in ipairs(Players:GetPlayers()) do
+						if plr ~= LocalPlayer and plr.Character then
+							local eChar = plr.Character
+							local eRoot = eChar:FindFirstChild("HumanoidRootPart")
+							local eHum = eChar:FindFirstChildOfClass("Humanoid")
+							if eRoot and eHum and eHum.Health > 0 then
+								if (root.Position - eRoot.Position).Magnitude <= 30 then
+									eHum.Health = 0
+								end
+							end
+						end
+					end
+				end
+			end)
 		end
 	end
 end)
 
--- ABA VISUAIS
-getgenv().ESP_Box = false
-getgenv().ESP_Line = false
-getgenv().ESP_Name = false
-getgenv().ESP_Distance = false
-getgenv().ESP_Friend = false
-getgenv().ESP_HealthBar = false
+local linePool = {}
+local function getOrCreateLine(index)
+	if not linePool[index] or not linePool[index].Parent then
+		local line = Instance.new("Frame", EspLineFolder)
+		line.Name = "Tracer_" .. tostring(index)
+		line.AnchorPoint = Vector2.new(0.5, 0.5)
+		line.BackgroundColor3 = COLOR_SECONDARY
+		line.BorderSizePixel = 0
+		line.Visible = false
+		line.ZIndex = 10
+		linePool[index] = line
+	end
+	return linePool[index]
+end
 
-CreateToggle(visualsPage, "ESP Box (Caixa)", function(state) getgenv().ESP_Box = state end)
-CreateToggle(visualsPage, "ESP Line (Linhas Tracers)", function(state) getgenv().ESP_Line = state end)
-CreateToggle(visualsPage, "ESP Health Bar (Barra de Vida)", function(state) getgenv().ESP_HealthBar = state end)
-CreateToggle(visualsPage, "ESP Name (Nome do Alvo)", function(state) getgenv().ESP_Name = state end)
-CreateToggle(visualsPage, "ESP Distance (Distância)", function(state) getgenv().ESP_Distance = state end)
-CreateToggle(visualsPage, "ESP Amigo (Jogadores/Aliados)", function(state) getgenv().ESP_Friend = state end)
-
--- ==========================================================================
--- 5. RUNSERVICE LOOP (AIMBOT + ESP)
--- ==========================================================================
-local drawings = {}
-
-local function removeDrawings(model)
-	if drawings[model] then
-		for _, obj in pairs(drawings[model]) do
-			pcall(function() obj:Remove() end)
-		end
-		drawings[model] = nil
+local function hideAllLines(fromIndex)
+	for i = fromIndex, #linePool do
+		if linePool[i] then linePool[i].Visible = false end
 	end
 end
 
-RunService.RenderStepped:Connect(function()
-	-- Speed Loop
-	if getgenv().Speed_Active and LocalPlayer.Character then
-		local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-		if hum then hum.WalkSpeed = getgenv().Speed_Value end
-	end
-
-	-- Aimbot Loop
-	if getgenv().Aimbot_Active then
-		local closestTarget = nil
-		local shortestDist = math.huge
-		
-		for _, model in ipairs(workspace:GetDescendants()) do
-			if model:IsA("Model") and model ~= LocalPlayer.Character then
-				local humanoid = model:FindFirstChildOfClass("Humanoid")
-				local targetPart = model:FindFirstChild("Head") or model:FindFirstChild("HumanoidRootPart") or model.PrimaryPart
-				
-				if humanoid and targetPart and humanoid.Health > 0 and not Players:GetPlayerFromCharacter(model) then
-					local screenPos, onScreen = Camera:WorldToViewportPoint(targetPart.Position)
-					if onScreen then
-						local mouseDist = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(screenPos.X, screenPos.Y)).Magnitude
-						if mouseDist < shortestDist then
-							shortestDist = mouseDist
-							closestTarget = targetPart
+task.spawn(function()
+	while task.wait(0.4) do
+		pcall(function()
+			for _, plr in ipairs(Players:GetPlayers()) do
+				if plr ~= LocalPlayer and plr.Character then
+					local char = plr.Character
+					if _G.KD_EspHighlight then
+						if not char:FindFirstChild("KD_Highlight") then
+							local hl = Instance.new("Highlight", char)
+							hl.Name = "KD_Highlight"
+							hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+							hl.FillColor = COLOR_ACCENT
+							hl.OutlineColor = COLOR_SECONDARY
+							hl.FillTransparency = 0.45
+							hl.OutlineTransparency = 0.1
 						end
+					else
+						local hl = char:FindFirstChild("KD_Highlight")
+						if hl then hl:Destroy() end
 					end
 				end
 			end
-		end
-		
-		if closestTarget then
-			local targetCF = CFrame.new(Camera.CFrame.Position, closestTarget.Position)
-			local smoothFactor = math.clamp(getgenv().Aimbot_Smoothness, 1, 30)
-			Camera.CFrame = Camera.CFrame:Lerp(targetCF, 1 / smoothFactor)
-		end
-	end
-
-	-- ESP Loop
-	for _, model in ipairs(workspace:GetDescendants()) do
-		if model:IsA("Model") and model ~= LocalPlayer.Character then
-			local humanoid = model:FindFirstChildOfClass("Humanoid")
-			local hrp = model:FindFirstChild("HumanoidRootPart") or model.PrimaryPart
-			local playerTarget = Players:GetPlayerFromCharacter(model)
-			
-			local shouldProcess = false
-			if playerTarget then
-				if getgenv().ESP_Friend then shouldProcess = true end
-			else
-				shouldProcess = true
-			end
-
-			if humanoid and hrp and humanoid.Health > 0 and shouldProcess then
-				local vector, onScreen = Camera:WorldToViewportPoint(hrp.Position)
-				
-				if onScreen then
-					if not drawings[model] then
-						drawings[model] = {
-							Box = Drawing.new("Square"),
-							Line = Drawing.new("Line"),
-							Text = Drawing.new("Text"),
-							HealthBarBg = Drawing.new("Square"),
-							HealthBar = Drawing.new("Square")
-						}
-						
-						drawings[model].Box.Visible = false
-						drawings[model].Box.Thickness = 1
-						drawings[model].Box.Filled = false
-
-						drawings[model].Line.Visible = false
-						drawings[model].Line.Thickness = 1
-
-						drawings[model].Text.Visible = false
-						drawings[model].Text.Size = 12
-						drawings[model].Text.Center = true
-						drawings[model].Text.Outline = true
-						drawings[model].Text.Color = Color3.fromRGB(255, 255, 255)
-
-						drawings[model].HealthBarBg.Visible = false
-						drawings[model].HealthBarBg.Thickness = 1
-						drawings[model].HealthBarBg.Filled = true
-						drawings[model].HealthBarBg.Color = Color3.fromRGB(40, 40, 40)
-
-						drawings[model].HealthBar.Visible = false
-						drawings[model].HealthBar.Thickness = 1
-						drawings[model].HealthBar.Filled = true
-						drawings[model].HealthBar.Color = Color3.fromRGB(0, 255, 102)
-					end
-					
-					local d = drawings[model]
-					local highlightColor = playerTarget and Color3.fromRGB(0, 180, 255) or Color3.fromRGB(0, 255, 102)
-					d.Box.Color = highlightColor
-					d.Line.Color = highlightColor
-
-					local head = model:FindFirstChild("Head") or hrp
-					local headVector = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.8, 0))
-					local legVector = Camera:WorldToViewportPoint(hrp.Position - Vector3.new(0, 3, 0))
-					local height = math.abs(headVector.Y - legVector.Y)
-					local width = height / 2
-
-					if getgenv().ESP_Box then
-						d.Box.Size = Vector2.new(width, height)
-						d.Box.Position = Vector2.new(vector.X - width / 2, headVector.Y)
-						d.Box.Visible = true
-					else
-						d.Box.Visible = false
-					end
-
-					if getgenv().ESP_Line then
-						d.Line.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
-						d.Line.To = Vector2.new(vector.X, legVector.Y)
-						d.Line.Visible = true
-					else
-						d.Line.Visible = false
-					end
-
-					if getgenv().ESP_HealthBar then
-						local healthPct = math.clamp(humanoid.Health / humanoid.MaxHealth, 0, 1)
-						local barX = vector.X - width / 2 - 6
-						local barY = headVector.Y
-						local barHeight = height
-						local barWidth = 3
-
-						d.HealthBarBg.Size = Vector2.new(barWidth, barHeight)
-						d.HealthBarBg.Position = Vector2.new(barX, barY)
-						d.HealthBarBg.Visible = true
-
-						local filledHeight = barHeight * healthPct
-						d.HealthBar.Size = Vector2.new(barWidth, filledHeight)
-						d.HealthBar.Position = Vector2.new(barX, barY + (barHeight - filledHeight))
-						d.HealthBar.Visible = true
-					else
-						d.HealthBarBg.Visible = false
-						d.HealthBar.Visible = false
-					end
-
-					local showName = getgenv().ESP_Name
-					local showDist = getgenv().ESP_Distance
-					
-					if showName or showDist then
-						local textParts = {}
-						if showName then 
-							table.insert(textParts, playerTarget and playerTarget.DisplayName or model.Name) 
-						end
-						if showDist then
-							local distance = math.floor((Camera.CFrame.Position - hrp.Position).Magnitude)
-							table.insert(textParts, "[" .. distance .. "m]")
-						end
-						
-						d.Text.Text = table.concat(textParts, " ")
-						d.Text.Position = Vector2.new(vector.X, headVector.Y - 18)
-						d.Text.Visible = true
-					else
-						d.Text.Visible = false
-					end
-				else
-					removeDrawings(model)
-				end
-			else
-				removeDrawings(model)
-			end
-		end
+		end)
 	end
 end)
 
-game:GetService("StarterGui"):SetCore("SendNotification", {
-	Title = "DARKGAMINGYT",
-	Text = "Painel ativado com sucesso!",
-	Duration = 4
-})
+task.spawn(function()
+	while task.wait(0.2) do
+		pcall(function()
+			for _, plr in ipairs(Players:GetPlayers()) do
+				if plr ~= LocalPlayer and plr.Character then
+					local char = plr.Character
+					local head = char:FindFirstChild("Head")
+					local hum = char:FindFirstChildOfClass("Humanoid")
+					local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+					local eRoot = char:FindFirstChild("HumanoidRootPart")
+					
+					if head and hum and hum.Health > 0 then
+						if _G.KD_EspName or _G.KD_EspDistance then
+							local tag = head:FindFirstChild("KD_NameTag")
+							if not tag then
+								tag = Instance.new("BillboardGui", head)
+								tag.Name = "KD_NameTag"
+								tag.Size = UDim2.new(0, 140, 0, 40)
+								tag.StudsOffset = Vector3.new(0, 2.8, 0)
+								tag.AlwaysOnTop = true
+								
+								local txt = Instance.new("TextLabel", tag)
+								txt.Name = "Txt"
+								txt.Size = UDim2.new(1, 0, 1, 0)
+								txt.BackgroundTransparency = 1
+								txt.TextColor3 = COLOR_TEXT
+								txt.TextSize = 11
+								txt.Font = FONT_MAIN
+							end
+							local t = tag:FindFirstChild("Txt")
+							if t then
+								local distStr = ""
+								if _G.KD_EspDistance and myRoot and eRoot then
+									local dist = math.floor((myRoot.Position - eRoot.Position).Magnitude)
+									distStr = string.format(" [%dm]", dist)
+								end
+								t.Text = string.format("%s [%d%%]%s", plr.Name, math.floor(hum.Health), distStr)
+							end
+						else
+							local tag = head:FindFirstChild("KD_NameTag")
+							if tag then tag:Destroy() end
+						end
+					end
+				end
+			end
+		end)
+	end
+end)
+
+RunService.RenderStepped:Connect(function()
+	if not _G.KD_EspLine then
+		hideAllLines(1)
+		return
+	end
+	local cam = workspace.CurrentCamera
+	if not cam then hideAllLines(1); return end
+	local vp = cam.ViewportSize
+	local originBottom = Vector2.new(vp.X / 2, vp.Y)
+	local activeCount = 0
+
+	for _, plr in ipairs(Players:GetPlayers()) do
+		if plr ~= LocalPlayer and plr.Character then
+			local char = plr.Character
+			local root = char:FindFirstChild("HumanoidRootPart")
+			local hum = char:FindFirstChildOfClass("Humanoid")
+			if root and hum and hum.Health > 0 then
+				local screenPos, onScreen = cam:WorldToViewportPoint(root.Position)
+				if onScreen and screenPos.Z > 0 then
+					activeCount = activeCount + 1
+					local line = getOrCreateLine(activeCount)
+					local targetPt = Vector2.new(screenPos.X, screenPos.Y)
+					local delta = targetPt - originBottom
+					local dist = delta.Magnitude
+					local center = (originBottom + targetPt) / 2
+					local angle = math.deg(math.atan2(delta.Y, delta.X))
+
+					line.Position = UDim2.fromOffset(center.X, center.Y)
+					line.Size = UDim2.fromOffset(dist, 1.5)
+					line.Rotation = angle
+					line.Visible = true
+				end
+			end
+		end
+	end
+	hideAllLines(activeCount + 1)
+end)
+
+RunService.RenderStepped:Connect(function()
+	pcall(function()
+		local cam = workspace.CurrentCamera
+		if _G.KD_AimbotHS and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
+			local closestTarget = nil
+			local shortestDist = math.huge
+			for _, plr in ipairs(Players:GetPlayers()) do
+				if plr ~= LocalPlayer and plr.Character then
+					local char = plr.Character
+					local hum = char:FindFirstChildOfClass("Humanoid")
+					local head = char:FindFirstChild("Head")
+					if hum and hum.Health > 0 and head then
+						local screenPos, onScreen = cam:WorldToViewportPoint(head.Position)
+						if onScreen then
+							local dist2D = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(cam.ViewportSize.X/2, cam.ViewportSize.Y/2)).Magnitude
+							if dist2D <= shortestDist then
+								shortestDist = dist2D
+								closestTarget = head
+							end
+						end
+					end
+				end
+			end
+			if closestTarget then
+				cam.CFrame = CFrame.new(cam.CFrame.Position, closestTarget.Position)
+			end
+		end
+	end)
+end)
+
+RunService.RenderStepped:Connect(function()
+	if _G.KD_FullBright then
+		game.Lighting.Brightness = 2
+		game.Lighting.GlobalShadows = false
+	end
+end)
+
+-- ==========================================================================
+-- REGISTRO NAS ABAS (COM AVISOS DE BAN 24H & AUTO-KILL TEST)
+-- ==========================================================================
+createToggle(panelBypass, "Bypass Anti-Kick Pro", function(enabled)
+	_G.KD_BypassAntiKick = enabled
+end, "Protege contra o sistema anti-cheat e expulsão")
+
+createToggle(panelEsp, "ESP Highlight Chams", function(enabled)
+	_G.KD_EspHighlight = enabled
+end, "Destaca os jogadores inimigos através das paredes")
+
+createToggle(panelEsp, "ESP Linhas Tracers", function(enabled)
+	_G.KD_EspLine = enabled
+end, "Traça linhas da base da tela até os adversários")
+
+createToggle(panelAim, "Aimbot Headshot 100% Grudado", function(enabled)
+	_G.KD_AimbotHS = enabled
+end, "Trava instantaneamente na cabeça (Risco de Ban 24h)", true)
+
+createToggle(panelAim, "Auto - Kill Inimigo Test", function(enabled)
+	_G.KD_AutoKillTest = enabled
+end, "Elimina inimigos próximos automaticamente (Risco de Ban 24h)", true)
+
+createToggle(panelGeral, "Speed Hack Real Agilidade", function(enabled)
+	_G.KD_SpeedOn = enabled
+	if not enabled then
+		pcall(function() LocalPlayer.Character.Humanoid.WalkSpeed = 16 end)
+	end
+end, "Aumenta a velocidade real (Risco de Ban 24h)", true)
+
+createToggle(panelGeral, "Wall Hack / NoClip Paredes", function(enabled)
+	_G.KD_WallHack = enabled
+end, "Atravessa paredes e obstáculos (Risco de Ban 24h)", true)
+
+createToggle(panelGeral, "ESP Nome & HP", function(enabled)
+	_G.KD_EspName = enabled
+end, "Mostra o nick e a vida em porcentagem na cabeça")
+
+createToggle(panelGeral, "ESP Distância Metros", function(enabled)
+	_G.KD_EspDistance = enabled
+end, "Exibe a distância exata até os adversários")
+
+createToggle(panelGeral, "Full Bright Visão Clara", function(enabled)
+	_G.KD_FullBright = enabled
+end, "Ilumina o mapa e remove sombras")
+
+print("[KNIFE DUELS BRUTAL V12] Carregado com Sucesso! Loading, Sound & Firebase Ativos.")
