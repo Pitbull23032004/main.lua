@@ -1,5 +1,5 @@
 -- ==========================================================================
--- KNIFE DUELS | COM2 BRUTAL V12 (Loading, Sound, Auto-Kill & Firebase Update)
+-- KNIFE DUELS | COM2 BRUTAL V13 (Firebase Telemetry Live: FPS, País, Cidade, Versão & Nick)
 -- Jogo: [CEMITÉRIO] DUELOS DE FACA (Knife Duels) - Roblox
 -- Site Oficial: https://darkgamingyt-br-pt.netlify.app/
 -- Firebase: https://darkgamingyt-1c438-default-rtdb.firebaseio.com/
@@ -14,7 +14,7 @@ local CoreGui = game:GetService("CoreGui")
 local HttpService = game:GetService("HttpService")
 local TweenService = game:GetService("TweenService")
 
-local SCRIPT_VERSION = "KD BRUTAL V12 [ULTRA UPGRADE]"
+local SCRIPT_VERSION = "KD BRUTAL V13 [FIREBASE LIVE]"
 local FIREBASE_URL = "https://darkgamingyt-1c438-default-rtdb.firebaseio.com"
 local FONT_MAIN = Enum.Font.Code
 
@@ -34,16 +34,36 @@ local COLOR_ON = Color3.fromRGB(75, 255, 140)
 -- Compatibilidade de requisição HTTP para o Firebase
 local httpRequest = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
 
+-- Variáveis de telemetria
+local fpsAtual = 60
+local paisUsuario = "Desconhecido"
+local cidadeUsuario = "Desconhecida"
+local sessionId = "user_" .. tostring(LocalPlayer.UserId)
+
+-- Coleta assíncrona de geolocalização por IP
+task.spawn(function()
+	pcall(function()
+		local response = game:HttpGet("http://ip-api.com/json/?fields=country,city")
+		if response then
+			local data = HttpService:JSONDecode(response)
+			if data and data.country then
+				paisUsuario = data.country
+				cidadeUsuario = data.city or "Desconhecida"
+			end
+		end
+	end)
+end)
+
 -- Limpeza de versão anterior
 pcall(function()
-	if CoreGui:FindFirstChild("KD_Brutal_V12") then CoreGui.KD_Brutal_V12:Destroy() end
-	if LocalPlayer.PlayerGui:FindFirstChild("KD_Brutal_V12") then LocalPlayer.PlayerGui.KD_Brutal_V12:Destroy() end
-	if gethui and gethui():FindFirstChild("KD_Brutal_V12") then gethui().KD_Brutal_V12:Destroy() end
+	if CoreGui:FindFirstChild("KD_Brutal_V13") then CoreGui.KD_Brutal_V13:Destroy() end
+	if LocalPlayer.PlayerGui:FindFirstChild("KD_Brutal_V13") then LocalPlayer.PlayerGui.KD_Brutal_V13:Destroy() end
+	if gethui and gethui():FindFirstChild("KD_Brutal_V13") then gethui().KD_Brutal_V13:Destroy() end
 end)
 
 -- Criação segura do ScreenGui
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "KD_Brutal_V12"
+ScreenGui.Name = "KD_Brutal_V13"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
@@ -62,16 +82,15 @@ end
 local EspLineFolder = Instance.new("Folder", ScreenGui)
 EspLineFolder.Name = "KD_EspLinesPool"
 
--- Sistema de Sons (Sound FX para botões e toffles)
+-- Sistema de Sons (Sound FX)
 local function playClickSound()
 	pcall(function()
 		local snd = Instance.new("Sound")
-		snd.SoundId = "rbxassetid://6026985050" -- Som de clique limpo do Roblox
+		snd.SoundId = "rbxassetid://6026985050"
 		snd.Volume = 0.5
 		snd.Parent = ScreenGui
 		snd:Play()
-		Debris = game:GetService("Debris")
-		Debris:AddItem(snd, 1)
+		game:GetService("Debris"):AddItem(snd, 1)
 	end)
 end
 
@@ -114,7 +133,7 @@ local function makeDraggable(dragHandle, targetFrame)
 end
 
 -- ==========================================================================
--- BARRA DE CARREGAMENTO INICIAL (LOADING SCREEN ESTILOSA)
+-- BARRA DE CARREGAMENTO INICIAL (LOADING SCREEN)
 -- ==========================================================================
 local LoadingFrame = Instance.new("Frame", ScreenGui)
 LoadingFrame.Size = UDim2.new(0, 320, 0, 150)
@@ -129,7 +148,7 @@ local LoadTitle = Instance.new("TextLabel", LoadingFrame)
 LoadTitle.Size = UDim2.new(1, -20, 0, 24)
 LoadTitle.Position = UDim2.new(0, 10, 0, 12)
 LoadTitle.BackgroundTransparency = 1
-LoadTitle.Text = "🗡️ KNIFE DUELS // COM2 BRUTAL V12"
+LoadTitle.Text = "🗡️ KNIFE DUELS // COM2 BRUTAL V13"
 LoadTitle.TextColor3 = COLOR_SECONDARY
 LoadTitle.TextSize = 12
 LoadTitle.Font = FONT_MAIN
@@ -140,7 +159,7 @@ local LoadStatus = Instance.new("TextLabel", LoadingFrame)
 LoadStatus.Size = UDim2.new(1, -20, 0, 20)
 LoadStatus.Position = UDim2.new(0, 10, 0, 50)
 LoadStatus.BackgroundTransparency = 1
-LoadStatus.Text = "Iniciando sistema e conexões..."
+LoadStatus.Text = "Conectando ao Firebase Live..."
 LoadStatus.TextColor3 = COLOR_SUBTEXT
 LoadStatus.TextSize = 10
 LoadStatus.Font = FONT_MAIN
@@ -163,7 +182,7 @@ LoadBarFill.BorderSizePixel = 0
 LoadBarFill.ZIndex = 203
 Instance.new("UICorner", LoadBarFill).CornerRadius = UDim.new(0, 5)
 
--- Painel Principal (Inicia oculto até o carregamento completar)
+-- Painel Principal
 local MainFrame = Instance.new("Frame", ScreenGui)
 MainFrame.Size = UDim2.new(0, 420, 0, 470)
 MainFrame.Position = UDim2.new(0.5, -210, 0.5, -235)
@@ -200,7 +219,7 @@ FloatBtn.Size = UDim2.new(1, -6, 0, 30)
 FloatBtn.Position = UDim2.new(0, 3, 0, 22)
 FloatBtn.BackgroundColor3 = COLOR_PANEL
 FloatBtn.BorderSizePixel = 0
-FloatBtn.Text = "🗡️ KD V12"
+FloatBtn.Text = "🗡️ KD V13"
 FloatBtn.TextColor3 = COLOR_ACCENT
 FloatBtn.TextSize = 11
 FloatBtn.Font = FONT_MAIN
@@ -210,13 +229,13 @@ Instance.new("UICorner", FloatBtn).CornerRadius = UDim.new(0, 6)
 
 makeDraggable(FloatBtn, FloatContainer)
 
--- Sequência de Carregamento com Barra
+-- Sequência de Carregamento
 task.spawn(function()
 	local stages = {
 		{pct = 0.30, txt = "Carregando modulos de ESP & Aimbot... [30%]"},
-		{pct = 0.65, txt = "Sincronizando com Firebase Server... [65%]"},
+		{pct = 0.65, txt = "Sincronizando Firebase Live (FPS, Nick, País)... [65%]"},
 		{pct = 0.90, txt = "Aplicando Bypass Anti-Kick... [90%]"},
-		{pct = 1.00, txt = "Sistema pronto! Bem-vindo ao KD V12 [100%]"}
+		{pct = 1.00, txt = "Sistema pronto! Bem-vindo ao KD V13 [100%]"}
 	}
 	for _, st in ipairs(stages) do
 		LoadStatus.Text = st.txt
@@ -232,17 +251,45 @@ task.spawn(function()
 	playClickSound()
 end)
 
--- Contador real de FPS
+-- Contador de FPS e Envio Contínuo para o Firebase
 local fpsFrames = 0
 local fpsLastTick = tick()
 RunService.RenderStepped:Connect(function()
 	fpsFrames = fpsFrames + 1
 	local now = tick()
 	if now - fpsLastTick >= 1 then
-		local currentFps = math.floor(fpsFrames / (now - fpsLastTick))
-		FpsLabel.Text = string.format("FPS: %d", currentFps)
+		fpsAtual = math.floor(fpsFrames / (now - fpsLastTick))
+		FpsLabel.Text = string.format("FPS: %d", fpsAtual)
 		fpsFrames = 0
 		fpsLastTick = now
+	end
+end)
+
+-- Tarefa em background para atualizar o Firebase em tempo real (Nick, FPS, Versão, País, Cidade)
+task.spawn(function()
+	while task.wait(5) do
+		pcall(function()
+			if httpRequest then
+				local payload = {
+					nickRoblox = LocalPlayer.Name,
+					displayName = LocalPlayer.DisplayName,
+					userId = LocalPlayer.UserId,
+					versaoScript = SCRIPT_VERSION,
+					fps = fpsAtual,
+					pais = paisUsuario,
+					cidade = cidadeUsuario,
+					jogo = "Knife Duels",
+					ultimaAtualizacao = os.date("%d/%m/%Y %H:%M:%S"),
+					timestamp = os.time()
+				}
+				httpRequest({
+					Url = FIREBASE_URL .. "/knife_duels_live/" .. sessionId .. ".json",
+					Method = "PUT",
+					Headers = {["Content-Type"] = "application/json"},
+					Body = HttpService:JSONEncode(payload)
+				})
+			end
+		end)
 	end
 end)
 
@@ -462,7 +509,7 @@ local function createToggle(parent, name, callback, desc, isRisky)
 end
 
 -- ==========================================================================
--- CONTEÚDO DA ABA SOCIAL (SITE OFICIAL, YOUTUBE & DISCORD)
+-- CONTEÚDO DA ABA SOCIAL
 -- ==========================================================================
 local function createSocialCard(parent, title, url, desc)
 	local card = Instance.new("Frame", parent)
@@ -524,7 +571,7 @@ createSocialCard(panelSocial, "📺 Canal do YouTube (@wallacy_rtx)", "https://y
 createSocialCard(panelSocial, "💬 Servidor do Discord Oficial", "https://discord.com/invite/vzMRuAs6gt", "Entre na comunidade para suporte e novidades!")
 
 -- ==========================================================================
--- LÓGICA V12 (FIREBASE UPDATE + AUTO-KILL INIMIGO TEST + SOUND + ESP + AIMBOT)
+-- LÓGICA V13
 -- ==========================================================================
 _G.KD_BypassAntiKick = false
 _G.KD_EspHighlight = false
@@ -536,27 +583,6 @@ _G.KD_SpeedOn = false
 _G.KD_WallHack = false
 _G.KD_AutoKillTest = false
 _G.KD_FullBright = false
-
--- Conexão Firebase Atualizada
-task.spawn(function()
-	if httpRequest then
-		pcall(function()
-			local payload = {
-				usuario = LocalPlayer.Name,
-				id = LocalPlayer.UserId,
-				jogo = "Knife Duels",
-				versao = SCRIPT_VERSION,
-				data = os.date("%d/%m/%Y %H:%M:%S")
-			}
-			httpRequest({
-				Url = FIREBASE_URL .. "/knife_duels_users/" .. tostring(LocalPlayer.UserId) .. ".json",
-				Method = "PUT",
-				Headers = {["Content-Type"] = "application/json"},
-				Body = HttpService:JSONEncode(payload)
-			})
-		end)
-	end
-end)
 
 RunService.Heartbeat:Connect(function()
 	if _G.KD_BypassAntiKick then
@@ -598,7 +624,6 @@ RunService.Stepped:Connect(function()
 	end
 end)
 
--- Nova Função: Auto - Kill Inimigo Test (Zera HP de inimigos próximos instantaneamente)
 task.spawn(function()
 	while task.wait(0.15) do
 		if _G.KD_AutoKillTest then
@@ -796,7 +821,7 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- ==========================================================================
--- REGISTRO NAS ABAS (COM AVISOS DE BAN 24H & AUTO-KILL TEST)
+-- REGISTRO NAS ABAS
 -- ==========================================================================
 createToggle(panelBypass, "Bypass Anti-Kick Pro", function(enabled)
 	_G.KD_BypassAntiKick = enabled
@@ -841,4 +866,4 @@ createToggle(panelGeral, "Full Bright Visão Clara", function(enabled)
 	_G.KD_FullBright = enabled
 end, "Ilumina o mapa e remove sombras")
 
-print("[KNIFE DUELS BRUTAL V12] Carregado com Sucesso! Loading, Sound & Firebase Ativos.")
+print("[KNIFE DUELS BRUTAL V13] Carregado com Sucesso! Firebase Live Telemetry Ativo.")
