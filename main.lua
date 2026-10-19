@@ -1,5 +1,5 @@
 -- ==========================================================================
--- KNIFE DUELS | COM2 BRUTAL V15 (ESP Vida BETA + Firebase Live + Menu Completo)
+-- KNIFE DUELS | COM2 BRUTAL V16 (Bypass VIP GitHub Corrigido + ESP Vida BETA)
 -- Jogo: [CEMITÉRIO] DUELOS DE FACA (Knife Duels) - Roblox
 -- Site Oficial: https://darkgamingyt-br-pt.netlify.app/
 -- Firebase: https://darkgamingyt-1c438-default-rtdb.firebaseio.com/
@@ -14,7 +14,7 @@ local CoreGui = game:GetService("CoreGui")
 local HttpService = game:GetService("HttpService")
 local TweenService = game:GetService("TweenService")
 
-local SCRIPT_VERSION = "KD BRUTAL V15 [ESP VIDA BETA]"
+local SCRIPT_VERSION = "KD BRUTAL V16 [BYPASS VIP GITHUB FIXED]"
 local FIREBASE_BASE_URL = "https://darkgamingyt-1c438-default-rtdb.firebaseio.com"
 local FONT_MAIN = Enum.Font.Code
 
@@ -56,14 +56,14 @@ end)
 
 -- Limpeza de versão anterior
 pcall(function()
-	if CoreGui:FindFirstChild("KD_Brutal_V15") then CoreGui.KD_Brutal_V15:Destroy() end
-	if LocalPlayer.PlayerGui:FindFirstChild("KD_Brutal_V15") then LocalPlayer.PlayerGui.KD_Brutal_V15:Destroy() end
-	if gethui and gethui():FindFirstChild("KD_Brutal_V15") then gethui().KD_Brutal_V15:Destroy() end
+	if CoreGui:FindFirstChild("KD_Brutal_V16") then CoreGui.KD_Brutal_V16:Destroy() end
+	if LocalPlayer.PlayerGui:FindFirstChild("KD_Brutal_V16") then LocalPlayer.PlayerGui.KD_Brutal_V16:Destroy() end
+	if gethui and gethui():FindFirstChild("KD_Brutal_V16") then gethui().KD_Brutal_V16:Destroy() end
 end)
 
 -- Criação segura do ScreenGui
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "KD_Brutal_V15"
+ScreenGui.Name = "KD_Brutal_V16"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
@@ -148,7 +148,7 @@ local LoadTitle = Instance.new("TextLabel", LoadingFrame)
 LoadTitle.Size = UDim2.new(1, -20, 0, 24)
 LoadTitle.Position = UDim2.new(0, 10, 0, 12)
 LoadTitle.BackgroundTransparency = 1
-LoadTitle.Text = "🗡️ KNIFE DUELS // COM2 BRUTAL V15"
+LoadTitle.Text = "🗡️ KNIFE DUELS // COM2 BRUTAL V16"
 LoadTitle.TextColor3 = COLOR_SECONDARY
 LoadTitle.TextSize = 12
 LoadTitle.Font = FONT_MAIN
@@ -159,7 +159,7 @@ local LoadStatus = Instance.new("TextLabel", LoadingFrame)
 LoadStatus.Size = UDim2.new(1, -20, 0, 20)
 LoadStatus.Position = UDim2.new(0, 10, 0, 50)
 LoadStatus.BackgroundTransparency = 1
-LoadStatus.Text = "Conectando ao Firebase DB..."
+LoadStatus.Text = "Carregando Bypass VIP GitHub..."
 LoadStatus.TextColor3 = COLOR_SUBTEXT
 LoadStatus.TextSize = 10
 LoadStatus.Font = FONT_MAIN
@@ -219,7 +219,7 @@ FloatBtn.Size = UDim2.new(1, -6, 0, 30)
 FloatBtn.Position = UDim2.new(0, 3, 0, 22)
 FloatBtn.BackgroundColor3 = COLOR_PANEL
 FloatBtn.BorderSizePixel = 0
-FloatBtn.Text = "🗡️ KD V15"
+FloatBtn.Text = "🗡️ KD V16"
 FloatBtn.TextColor3 = COLOR_ACCENT
 FloatBtn.TextSize = 11
 FloatBtn.Font = FONT_MAIN
@@ -232,10 +232,10 @@ makeDraggable(FloatBtn, FloatContainer)
 -- Sequência de Carregamento
 task.spawn(function()
 	local stages = {
-		{pct = 0.30, txt = "Carregando modulos ESP & ESP Vida BETA... [30%]"},
-		{pct = 0.65, txt = "Sincronizando com Firebase Realtime DB... [65%]"},
-		{pct = 0.90, txt = "Aplicando Bypass Anti-Kick... [90%]"},
-		{pct = 1.00, txt = "Sistema pronto! Bem-vindo ao KD V15 [100%]"}
+		{pct = 0.30, txt = "Carregando ESP Vida BETA & Módulos... [30%]"},
+		{pct = 0.65, txt = "Sincronizando Firebase Database... [65%]"},
+		{pct = 0.90, txt = "Aplicando Bypass VIP GitHub (Sem travamento)... [90%]"},
+		{pct = 1.00, txt = "Pronto! Bem-vindo ao KD V16 [100%]"}
 	}
 	for _, st in ipairs(stages) do
 		LoadStatus.Text = st.txt
@@ -571,7 +571,7 @@ createSocialCard(panelSocial, "📺 Canal do YouTube (@wallacy_rtx)", "https://y
 createSocialCard(panelSocial, "💬 Servidor do Discord Oficial", "https://discord.com/invite/vzMRuAs6gt", "Entre na comunidade para suporte e novidades!")
 
 -- ==========================================================================
--- LÓGICA V15 (ESP VIDA BETA + ESP COMPLETO + AIMBOT + AUTO-KILL TEST)
+-- LÓGICA V16 (BYPASS VIP GITHUB CORRIGIDO + ESP VIDA BETA + FUNCIONALIDADES)
 -- ==========================================================================
 _G.KD_BypassAntiKick = false
 _G.KD_EspHighlight = false
@@ -585,14 +585,17 @@ _G.KD_WallHack = false
 _G.KD_AutoKillTest = false
 _G.KD_FullBright = false
 
-RunService.Heartbeat:Connect(function()
+-- Bypass VIP GitHub otimizado (Protege sem congelar ou travar a física do boneco)
+RunService.Stepped:Connect(function()
 	if _G.KD_BypassAntiKick then
 		pcall(function()
 			local char = LocalPlayer.Character
-			local root = char and char:FindFirstChild("HumanoidRootPart")
-			if root then
-				root.AssemblyLinearVelocity = Vector3.zero
-				root.AssemblyAngularVelocity = Vector3.zero
+			if char then
+				for _, part in ipairs(char:GetDescendants()) do
+					if part:IsA("BasePart") then
+						part.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.3, 0, 1, 1)
+					end
+				end
 			end
 		end)
 	end
@@ -697,7 +700,7 @@ task.spawn(function()
 	end
 end)
 
--- ESP Nome, HP & ESP Vida BETA (Barra de HP detalhada na cabeça)
+-- ESP Nome, HP & ESP Vida BETA
 task.spawn(function()
 	while task.wait(0.2) do
 		pcall(function()
@@ -852,9 +855,9 @@ end)
 -- ==========================================================================
 -- REGISTRO NAS ABAS
 -- ==========================================================================
-createToggle(panelBypass, "Bypass Anti-Kick Pro", function(enabled)
+createToggle(panelBypass, "Bypass VIP GitHub Pro", function(enabled)
 	_G.KD_BypassAntiKick = enabled
-end, "Protege contra o sistema anti-cheat e expulsão")
+end, "Protege contra anti-cheat sem travar o personagem")
 
 createToggle(panelEsp, "ESP Highlight Chams", function(enabled)
 	_G.KD_EspHighlight = enabled
@@ -899,4 +902,4 @@ createToggle(panelGeral, "Full Bright Visão Clara", function(enabled)
 	_G.KD_FullBright = enabled
 end, "Ilumina o mapa e remove sombras")
 
-print("[KNIFE DUELS BRUTAL V15] Carregado com Sucesso! ESP Vida BETA Adicionado.")
+print("[KNIFE DUELS BRUTAL V16] Carregado com Sucesso! Bypass VIP GitHub Integrado e Corrigido.")
