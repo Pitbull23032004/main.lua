@@ -1,5 +1,5 @@
 -- ==========================================================================
--- KNIFE DUELS | COM2 BRUTAL V13 (Firebase Telemetry Live: FPS, País, Cidade, Versão & Nick)
+-- KNIFE DUELS | COM2 BRUTAL V15 (ESP Vida BETA + Firebase Live + Menu Completo)
 -- Jogo: [CEMITÉRIO] DUELOS DE FACA (Knife Duels) - Roblox
 -- Site Oficial: https://darkgamingyt-br-pt.netlify.app/
 -- Firebase: https://darkgamingyt-1c438-default-rtdb.firebaseio.com/
@@ -14,8 +14,8 @@ local CoreGui = game:GetService("CoreGui")
 local HttpService = game:GetService("HttpService")
 local TweenService = game:GetService("TweenService")
 
-local SCRIPT_VERSION = "KD BRUTAL V13 [FIREBASE LIVE]"
-local FIREBASE_URL = "https://darkgamingyt-1c438-default-rtdb.firebaseio.com"
+local SCRIPT_VERSION = "KD BRUTAL V15 [ESP VIDA BETA]"
+local FIREBASE_BASE_URL = "https://darkgamingyt-1c438-default-rtdb.firebaseio.com"
 local FONT_MAIN = Enum.Font.Code
 
 -- Paleta de Cores Estilo Cemitério / Roxo Halloween & Ciano Neon
@@ -38,7 +38,7 @@ local httpRequest = (syn and syn.request) or (http and http.request) or http_req
 local fpsAtual = 60
 local paisUsuario = "Desconhecido"
 local cidadeUsuario = "Desconhecida"
-local sessionId = "user_" .. tostring(LocalPlayer.UserId)
+local safeKey = "user_" .. tostring(LocalPlayer.UserId)
 
 -- Coleta assíncrona de geolocalização por IP
 task.spawn(function()
@@ -56,14 +56,14 @@ end)
 
 -- Limpeza de versão anterior
 pcall(function()
-	if CoreGui:FindFirstChild("KD_Brutal_V13") then CoreGui.KD_Brutal_V13:Destroy() end
-	if LocalPlayer.PlayerGui:FindFirstChild("KD_Brutal_V13") then LocalPlayer.PlayerGui.KD_Brutal_V13:Destroy() end
-	if gethui and gethui():FindFirstChild("KD_Brutal_V13") then gethui().KD_Brutal_V13:Destroy() end
+	if CoreGui:FindFirstChild("KD_Brutal_V15") then CoreGui.KD_Brutal_V15:Destroy() end
+	if LocalPlayer.PlayerGui:FindFirstChild("KD_Brutal_V15") then LocalPlayer.PlayerGui.KD_Brutal_V15:Destroy() end
+	if gethui and gethui():FindFirstChild("KD_Brutal_V15") then gethui().KD_Brutal_V15:Destroy() end
 end)
 
 -- Criação segura do ScreenGui
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "KD_Brutal_V13"
+ScreenGui.Name = "KD_Brutal_V15"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
@@ -148,7 +148,7 @@ local LoadTitle = Instance.new("TextLabel", LoadingFrame)
 LoadTitle.Size = UDim2.new(1, -20, 0, 24)
 LoadTitle.Position = UDim2.new(0, 10, 0, 12)
 LoadTitle.BackgroundTransparency = 1
-LoadTitle.Text = "🗡️ KNIFE DUELS // COM2 BRUTAL V13"
+LoadTitle.Text = "🗡️ KNIFE DUELS // COM2 BRUTAL V15"
 LoadTitle.TextColor3 = COLOR_SECONDARY
 LoadTitle.TextSize = 12
 LoadTitle.Font = FONT_MAIN
@@ -159,7 +159,7 @@ local LoadStatus = Instance.new("TextLabel", LoadingFrame)
 LoadStatus.Size = UDim2.new(1, -20, 0, 20)
 LoadStatus.Position = UDim2.new(0, 10, 0, 50)
 LoadStatus.BackgroundTransparency = 1
-LoadStatus.Text = "Conectando ao Firebase Live..."
+LoadStatus.Text = "Conectando ao Firebase DB..."
 LoadStatus.TextColor3 = COLOR_SUBTEXT
 LoadStatus.TextSize = 10
 LoadStatus.Font = FONT_MAIN
@@ -219,7 +219,7 @@ FloatBtn.Size = UDim2.new(1, -6, 0, 30)
 FloatBtn.Position = UDim2.new(0, 3, 0, 22)
 FloatBtn.BackgroundColor3 = COLOR_PANEL
 FloatBtn.BorderSizePixel = 0
-FloatBtn.Text = "🗡️ KD V13"
+FloatBtn.Text = "🗡️ KD V15"
 FloatBtn.TextColor3 = COLOR_ACCENT
 FloatBtn.TextSize = 11
 FloatBtn.Font = FONT_MAIN
@@ -232,10 +232,10 @@ makeDraggable(FloatBtn, FloatContainer)
 -- Sequência de Carregamento
 task.spawn(function()
 	local stages = {
-		{pct = 0.30, txt = "Carregando modulos de ESP & Aimbot... [30%]"},
-		{pct = 0.65, txt = "Sincronizando Firebase Live (FPS, Nick, País)... [65%]"},
+		{pct = 0.30, txt = "Carregando modulos ESP & ESP Vida BETA... [30%]"},
+		{pct = 0.65, txt = "Sincronizando com Firebase Realtime DB... [65%]"},
 		{pct = 0.90, txt = "Aplicando Bypass Anti-Kick... [90%]"},
-		{pct = 1.00, txt = "Sistema pronto! Bem-vindo ao KD V13 [100%]"}
+		{pct = 1.00, txt = "Sistema pronto! Bem-vindo ao KD V15 [100%]"}
 	}
 	for _, st in ipairs(stages) do
 		LoadStatus.Text = st.txt
@@ -251,7 +251,7 @@ task.spawn(function()
 	playClickSound()
 end)
 
--- Contador de FPS e Envio Contínuo para o Firebase
+-- Contador de FPS
 local fpsFrames = 0
 local fpsLastTick = tick()
 RunService.RenderStepped:Connect(function()
@@ -265,9 +265,9 @@ RunService.RenderStepped:Connect(function()
 	end
 end)
 
--- Tarefa em background para atualizar o Firebase em tempo real (Nick, FPS, Versão, País, Cidade)
+-- Tarefa em background para atualizar o Firebase em tempo real
 task.spawn(function()
-	while task.wait(5) do
+	while task.wait(4) do
 		pcall(function()
 			if httpRequest then
 				local payload = {
@@ -283,7 +283,7 @@ task.spawn(function()
 					timestamp = os.time()
 				}
 				httpRequest({
-					Url = FIREBASE_URL .. "/knife_duels_live/" .. sessionId .. ".json",
+					Url = FIREBASE_BASE_URL .. "/knife_duels_users/" .. safeKey .. ".json",
 					Method = "PUT",
 					Headers = {["Content-Type"] = "application/json"},
 					Body = HttpService:JSONEncode(payload)
@@ -571,11 +571,12 @@ createSocialCard(panelSocial, "📺 Canal do YouTube (@wallacy_rtx)", "https://y
 createSocialCard(panelSocial, "💬 Servidor do Discord Oficial", "https://discord.com/invite/vzMRuAs6gt", "Entre na comunidade para suporte e novidades!")
 
 -- ==========================================================================
--- LÓGICA V13
+-- LÓGICA V15 (ESP VIDA BETA + ESP COMPLETO + AIMBOT + AUTO-KILL TEST)
 -- ==========================================================================
 _G.KD_BypassAntiKick = false
 _G.KD_EspHighlight = false
 _G.KD_EspName = false
+_G.KD_EspVidaBeta = false
 _G.KD_EspLine = false
 _G.KD_EspDistance = false
 _G.KD_AimbotHS = false
@@ -696,6 +697,7 @@ task.spawn(function()
 	end
 end)
 
+-- ESP Nome, HP & ESP Vida BETA (Barra de HP detalhada na cabeça)
 task.spawn(function()
 	while task.wait(0.2) do
 		pcall(function()
@@ -708,31 +710,58 @@ task.spawn(function()
 					local eRoot = char:FindFirstChild("HumanoidRootPart")
 					
 					if head and hum and hum.Health > 0 then
-						if _G.KD_EspName or _G.KD_EspDistance then
+						if _G.KD_EspName or _G.KD_EspDistance or _G.KD_EspVidaBeta then
 							local tag = head:FindFirstChild("KD_NameTag")
 							if not tag then
 								tag = Instance.new("BillboardGui", head)
 								tag.Name = "KD_NameTag"
-								tag.Size = UDim2.new(0, 140, 0, 40)
+								tag.Size = UDim2.new(0, 140, 0, 50)
 								tag.StudsOffset = Vector3.new(0, 2.8, 0)
 								tag.AlwaysOnTop = true
 								
 								local txt = Instance.new("TextLabel", tag)
 								txt.Name = "Txt"
-								txt.Size = UDim2.new(1, 0, 1, 0)
+								txt.Size = UDim2.new(1, 0, 0, 20)
 								txt.BackgroundTransparency = 1
 								txt.TextColor3 = COLOR_TEXT
 								txt.TextSize = 11
 								txt.Font = FONT_MAIN
+
+								local barBg = Instance.new("Frame", tag)
+								barBg.Name = "BarBg"
+								barBg.Size = UDim2.new(0.85, 0, 0, 6)
+								barBg.Position = UDim2.new(0.075, 0, 0, 24)
+								barBg.BackgroundColor3 = COLOR_BG
+								barBg.BorderSizePixel = 0
+								applyStroke(barBg, COLOR_BORDER, 1)
+
+								local barFill = Instance.new("Frame", barBg)
+								barFill.Name = "Fill"
+								barFill.Size = UDim2.new(1, 0, 1, 0)
+								barFill.BackgroundColor3 = COLOR_ON
+								barFill.BorderSizePixel = 0
 							end
-							local t = tag:FindFirstChild("Txt")
-							if t then
+							local label = tag:FindFirstChild("Txt")
+							local barBg = tag:FindFirstChild("BarBg")
+							
+							if label then
 								local distStr = ""
 								if _G.KD_EspDistance and myRoot and eRoot then
 									local dist = math.floor((myRoot.Position - eRoot.Position).Magnitude)
 									distStr = string.format(" [%dm]", dist)
 								end
-								t.Text = string.format("%s [%d%%]%s", plr.Name, math.floor(hum.Health), distStr)
+								label.Text = string.format("%s [%d%%]%s", plr.Name, math.floor(hum.Health), distStr)
+							end
+
+							if barBg then
+								barBg.Visible = _G.KD_EspVidaBeta
+								local fill = barBg:FindFirstChild("Fill")
+								if fill then
+									local maxHp = math.max(hum.MaxHealth, 1)
+									local ratio = math.clamp(hum.Health / maxHp, 0, 1)
+									fill.Size = UDim2.new(ratio, 0, 1, 0)
+									fill.BackgroundColor3 = ratio > 0.4 and COLOR_ON or COLOR_OFF
+								end
 							end
 						else
 							local tag = head:FindFirstChild("KD_NameTag")
@@ -835,6 +864,10 @@ createToggle(panelEsp, "ESP Linhas Tracers", function(enabled)
 	_G.KD_EspLine = enabled
 end, "Traça linhas da base da tela até os adversários")
 
+createToggle(panelEsp, "ESP Vida (BETA)", function(enabled)
+	_G.KD_EspVidaBeta = enabled
+end, "Mostra barra de HP detalhada acima dos inimigos")
+
 createToggle(panelAim, "Aimbot Headshot 100% Grudado", function(enabled)
 	_G.KD_AimbotHS = enabled
 end, "Trava instantaneamente na cabeça (Risco de Ban 24h)", true)
@@ -856,7 +889,7 @@ end, "Atravessa paredes e obstáculos (Risco de Ban 24h)", true)
 
 createToggle(panelGeral, "ESP Nome & HP", function(enabled)
 	_G.KD_EspName = enabled
-end, "Mostra o nick e a vida em porcentagem na cabeça")
+end, "Mostra o nick e a vida em porcentagem")
 
 createToggle(panelGeral, "ESP Distância Metros", function(enabled)
 	_G.KD_EspDistance = enabled
@@ -866,4 +899,4 @@ createToggle(panelGeral, "Full Bright Visão Clara", function(enabled)
 	_G.KD_FullBright = enabled
 end, "Ilumina o mapa e remove sombras")
 
-print("[KNIFE DUELS BRUTAL V13] Carregado com Sucesso! Firebase Live Telemetry Ativo.")
+print("[KNIFE DUELS BRUTAL V15] Carregado com Sucesso! ESP Vida BETA Adicionado.")
