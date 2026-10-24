@@ -1,10 +1,10 @@
 -- ==========================================================================
--- KNIFE DUELS | COM2 BRUTAL V16 (Bypass VIP GitHub Corrigido + ESP Vida BETA)
+-- KNIFE DUELS | COM2 BRUTAL V17 (Bypass VIP + Teleport + Recoil + Tiro Infinito)
 -- Jogo: [CEMITÉRIO] DUELOS DE FACA (Knife Duels) - Roblox
 -- Site Oficial: https://darkgamingyt-br-pt.netlify.app/
 -- Firebase: https://darkgamingyt-1c438-default-rtdb.firebaseio.com/
 -- Canal: https://youtube.com/@wallacy_rtx | Discord: https://discord.com/invite/vzMRuAs6gt
--- ==========================================================================
+-- ==========================================================================[cite: 1]
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -14,7 +14,7 @@ local CoreGui = game:GetService("CoreGui")
 local HttpService = game:GetService("HttpService")
 local TweenService = game:GetService("TweenService")
 
-local SCRIPT_VERSION = "KD BRUTAL V16 [BYPASS VIP GITHUB FIXED]"
+local SCRIPT_VERSION = "KD BRUTAL V17 [TELEPORT + RECOIL + RAPID SHOT]"
 local FIREBASE_BASE_URL = "https://darkgamingyt-1c438-default-rtdb.firebaseio.com"
 local FONT_MAIN = Enum.Font.Code
 
@@ -57,13 +57,16 @@ end)
 -- Limpeza de versão anterior
 pcall(function()
 	if CoreGui:FindFirstChild("KD_Brutal_V16") then CoreGui.KD_Brutal_V16:Destroy() end
+	if CoreGui:FindFirstChild("KD_Brutal_V17") then CoreGui.KD_Brutal_V17:Destroy() end
 	if LocalPlayer.PlayerGui:FindFirstChild("KD_Brutal_V16") then LocalPlayer.PlayerGui.KD_Brutal_V16:Destroy() end
+	if LocalPlayer.PlayerGui:FindFirstChild("KD_Brutal_V17") then LocalPlayer.PlayerGui.KD_Brutal_V17:Destroy() end
 	if gethui and gethui():FindFirstChild("KD_Brutal_V16") then gethui().KD_Brutal_V16:Destroy() end
+	if gethui and gethui():FindFirstChild("KD_Brutal_V17") then gethui().KD_Brutal_V17:Destroy() end
 end)
 
 -- Criação segura do ScreenGui
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "KD_Brutal_V16"
+ScreenGui.Name = "KD_Brutal_V17"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
@@ -148,7 +151,7 @@ local LoadTitle = Instance.new("TextLabel", LoadingFrame)
 LoadTitle.Size = UDim2.new(1, -20, 0, 24)
 LoadTitle.Position = UDim2.new(0, 10, 0, 12)
 LoadTitle.BackgroundTransparency = 1
-LoadTitle.Text = "🗡️ KNIFE DUELS // COM2 BRUTAL V16"
+LoadTitle.Text = "🗡️ KNIFE DUELS // COM2 BRUTAL V17"
 LoadTitle.TextColor3 = COLOR_SECONDARY
 LoadTitle.TextSize = 12
 LoadTitle.Font = FONT_MAIN
@@ -159,7 +162,7 @@ local LoadStatus = Instance.new("TextLabel", LoadingFrame)
 LoadStatus.Size = UDim2.new(1, -20, 0, 20)
 LoadStatus.Position = UDim2.new(0, 10, 0, 50)
 LoadStatus.BackgroundTransparency = 1
-LoadStatus.Text = "Carregando Bypass VIP GitHub..."
+LoadStatus.Text = "Carregando Módulos e Teleport..."
 LoadStatus.TextColor3 = COLOR_SUBTEXT
 LoadStatus.TextSize = 10
 LoadStatus.Font = FONT_MAIN
@@ -219,7 +222,7 @@ FloatBtn.Size = UDim2.new(1, -6, 0, 30)
 FloatBtn.Position = UDim2.new(0, 3, 0, 22)
 FloatBtn.BackgroundColor3 = COLOR_PANEL
 FloatBtn.BorderSizePixel = 0
-FloatBtn.Text = "🗡️ KD V16"
+FloatBtn.Text = "🗡️ KD V17"
 FloatBtn.TextColor3 = COLOR_ACCENT
 FloatBtn.TextSize = 11
 FloatBtn.Font = FONT_MAIN
@@ -232,10 +235,10 @@ makeDraggable(FloatBtn, FloatContainer)
 -- Sequência de Carregamento
 task.spawn(function()
 	local stages = {
-		{pct = 0.30, txt = "Carregando ESP Vida BETA & Módulos... [30%]"},
+		{pct = 0.30, txt = "Carregando ESP e Modificadores... [30%]"},
 		{pct = 0.65, txt = "Sincronizando Firebase Database... [65%]"},
-		{pct = 0.90, txt = "Aplicando Bypass VIP GitHub (Sem travamento)... [90%]"},
-		{pct = 1.00, txt = "Pronto! Bem-vindo ao KD V16 [100%]"}
+		{pct = 0.90, txt = "Ativando Teleport, Recoin e Tiro Rápido... [90%]"},
+		{pct = 1.00, txt = "Pronto! Bem-vindo ao KD V17 [100%]"}
 	}
 	for _, st in ipairs(stages) do
 		LoadStatus.Text = st.txt
@@ -571,7 +574,7 @@ createSocialCard(panelSocial, "📺 Canal do YouTube (@wallacy_rtx)", "https://y
 createSocialCard(panelSocial, "💬 Servidor do Discord Oficial", "https://discord.com/invite/vzMRuAs6gt", "Entre na comunidade para suporte e novidades!")
 
 -- ==========================================================================
--- LÓGICA V16 (BYPASS VIP GITHUB CORRIGIDO + ESP VIDA BETA + FUNCIONALIDADES)
+-- LÓGICA V17 (TELEPORT, ESCOLHER ALVO, RECOIL, TIRO INFINITO E RÁPIDO)
 -- ==========================================================================
 _G.KD_BypassAntiKick = false
 _G.KD_EspHighlight = false
@@ -584,8 +587,109 @@ _G.KD_SpeedOn = false
 _G.KD_WallHack = false
 _G.KD_AutoKillTest = false
 _G.KD_FullBright = false
+_G.KD_NoRecoil = false
+_G.KD_InfiniteAmmo = false
+_G.KD_RapidFire = false
 
--- Bypass VIP GitHub otimizado (Protege sem congelar ou travar a física do boneco)
+-- Sistema de Escolher Alvo para Teleporte
+local selectedTargetPlayer = nil
+
+local function createTeleportSection(parent)
+	local row = Instance.new("Frame", parent)
+	row.Size = UDim2.new(1, 0, 0, 78)
+	row.BackgroundColor3 = COLOR_PANEL
+	row.BorderSizePixel = 0
+	row.ZIndex = 83
+	Instance.new("UICorner", row).CornerRadius = UDim.new(0, 6)
+	applyStroke(row, COLOR_ACCENT, 1)
+
+	local label = Instance.new("TextLabel", row)
+	label.Size = UDim2.new(1, -20, 0, 20)
+	label.Position = UDim2.new(0, 10, 0, 6)
+	label.BackgroundTransparency = 1
+	label.Text = "> Teleport & Escolher Alvo"
+	label.TextColor3 = COLOR_TEXT
+	label.TextSize = 11
+	label.Font = FONT_MAIN
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.ZIndex = 84
+
+	local targetInfo = Instance.new("TextLabel", row)
+	targetInfo.Size = UDim2.new(1, -20, 0, 18)
+	targetInfo.Position = UDim2.new(0, 10, 0, 26)
+	targetInfo.BackgroundTransparency = 1
+	targetInfo.Text = "Alvo Atual: Nenhum selecionado"
+	targetInfo.TextColor3 = COLOR_SECONDARY
+	targetInfo.TextSize = 9
+	targetInfo.Font = FONT_MAIN
+	targetInfo.TextXAlignment = Enum.TextXAlignment.Left
+	targetInfo.ZIndex = 84
+
+	local chooseBtn = Instance.new("TextButton", row)
+	chooseBtn.Size = UDim2.new(0.48, 0, 0, 24)
+	chooseBtn.Position = UDim2.new(0, 10, 0, 48)
+	chooseBtn.BackgroundColor3 = COLOR_ITEM
+	chooseBtn.BorderSizePixel = 0
+	chooseBtn.Text = "🔄 Escolher Alvo"
+	chooseBtn.TextColor3 = COLOR_TEXT
+	chooseBtn.TextSize = 9
+	chooseBtn.Font = FONT_MAIN
+	chooseBtn.ZIndex = 84
+	Instance.new("UICorner", chooseBtn).CornerRadius = UDim.new(0, 4)
+	applyStroke(chooseBtn, COLOR_BORDER, 1)
+
+	local tpBtn = Instance.new("TextButton", row)
+	tpBtn.Size = UDim2.new(0.48, 0, 0, 24)
+	tpBtn.Position = UDim2.new(0.51, 0, 0, 48)
+	tpBtn.BackgroundColor3 = COLOR_ITEM
+	tpBtn.BorderSizePixel = 0
+	tpBtn.Text = "⚡ Teleportar"
+	tpBtn.TextColor3 = COLOR_ON
+	tpBtn.TextSize = 9
+	tpBtn.Font = FONT_MAIN
+	tpBtn.ZIndex = 84
+	Instance.new("UICorner", tpBtn).CornerRadius = UDim.new(0, 4)
+	applyStroke(tpBtn, COLOR_ON, 1)
+
+	local playersListCache = {}
+	local cacheIndex = 1
+
+	chooseBtn.MouseButton1Click:Connect(function()
+		playClickSound()
+		playersListCache = {}
+		for _, plr in ipairs(Players:GetPlayers()) do
+			if plr ~= LocalPlayer then
+				table.insert(playersListCache, plr)
+			end
+		end
+		if #playersListCache == 0 then
+			targetInfo.Text = "Nenhum outro jogador no servidor!"
+			selectedTargetPlayer = nil
+			return
+		end
+		cacheIndex = cacheIndex > #playersListCache and 1 or cacheIndex
+		selectedTargetPlayer = playersListCache[cacheIndex]
+		cacheIndex = cacheIndex + 1
+		targetInfo.Text = "Alvo: " .. selectedTargetPlayer.Name
+	end)
+
+	tpBtn.MouseButton1Click:Connect(function()
+		playClickSound()
+		pcall(function()
+			if selectedTargetPlayer and selectedTargetPlayer.Character then
+				local eRoot = selectedTargetPlayer.Character:FindFirstChild("HumanoidRootPart")
+				local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+				if eRoot and myRoot then
+					myRoot.CFrame = eRoot.CFrame + Vector3.new(0, 3, 0)
+				end
+			else
+				targetInfo.Text = "Alvo inválido ou ausente!"
+			end
+		end)
+	end)
+end
+
+-- Bypass VIP GitHub otimizado
 RunService.Stepped:Connect(function()
 	if _G.KD_BypassAntiKick then
 		pcall(function()
@@ -626,6 +730,38 @@ RunService.Stepped:Connect(function()
 			end
 		end)
 	end
+end)
+
+-- Sem Recuo (Recoin), Tiro Infinito e Rápido
+RunService.Heartbeat:Connect(function()
+	pcall(function()
+		local char = LocalPlayer.Character
+		local backpack = LocalPlayer:FindFirstChild("Backpack")
+		local containers = {char, backpack}
+
+		for _, container in ipairs(containers) do
+			if container then
+				for _, tool in ipairs(container:GetChildren()) do
+					if tool:IsA("Tool") then
+						for _, v in ipairs(tool:GetDescendants()) do
+							-- Sem Recuo (Recoin)
+							if _G.KD_NoRecoil and (v.Name:lower():find("recoil") or v.Name:lower():find("spread") or v.Name:lower():find("kick")) and (v:IsA("NumberValue") or v:IsA("IntValue")) then
+								v.Value = 0
+							end
+							-- Tiro Infinito
+							if _G.KD_InfiniteAmmo and (v.Name:lower():find("ammo") or v.Name:lower():find("clip") or v.Name:lower():find("bullets")) and (v:IsA("NumberValue") or v:IsA("IntValue")) then
+								v.Value = 999
+							end
+							-- Tiro Rápido
+							if _G.KD_RapidFire and (v.Name:lower():find("cooldown") or v.Name:lower():find("firerate") or v.Name:lower():find("delay")) and (v:IsA("NumberValue") or v:IsA("IntValue")) then
+								v.Value = 0.01
+							end
+						end
+					end
+				end
+			end
+		end
+	end)
 end)
 
 task.spawn(function()
@@ -859,6 +995,21 @@ createToggle(panelBypass, "Bypass VIP GitHub Pro", function(enabled)
 	_G.KD_BypassAntiKick = enabled
 end, "Protege contra anti-cheat sem travar o personagem")
 
+-- Adicionar seção de Teleport na aba Geral
+createTeleportSection(panelGeral)
+
+createToggle(panelGeral, "Sem Recuo / Recoin (Zero)", function(enabled)
+	_G.KD_NoRecoil = enabled
+end, "Remove o recuo dos tiros e armas")
+
+createToggle(panelGeral, "Tiro Infinito (Ammo)", function(enabled)
+	_G.KD_InfiniteAmmo = enabled
+end, "Munição infinita nos itens e armas equipadas")
+
+createToggle(panelGeral, "Tiro Rápido (Rapid Fire)", function(enabled)
+	_G.KD_RapidFire = enabled
+end, "Acelera a cadência de disparo ao máximo")
+
 createToggle(panelEsp, "ESP Highlight Chams", function(enabled)
 	_G.KD_EspHighlight = enabled
 end, "Destaca os jogadores inimigos através das paredes")
@@ -902,4 +1053,4 @@ createToggle(panelGeral, "Full Bright Visão Clara", function(enabled)
 	_G.KD_FullBright = enabled
 end, "Ilumina o mapa e remove sombras")
 
-print("[KNIFE DUELS BRUTAL V16] Carregado com Sucesso! Bypass VIP GitHub Integrado e Corrigido.")
+print("[KNIFE DUELS BRUTAL V17] Carregado com Sucesso! Teleport, Recoin, Tiro Infinito e Rápido integrados.")
